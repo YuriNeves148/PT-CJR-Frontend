@@ -160,16 +160,20 @@ export default function Cadastro() {
         </p>
       </section>
       <aside className="mt-[10.7vh] hidden min-h-0 min-w-0 flex-1 flex-col items-center gap-8 overflow-hidden md:flex">
-  <img
-    className=" w-full max-w-[460px] shrink-0"
-    src="/logo-stockio.png"
-    alt="Stock.io"
-  /> 
-  <img
-   className="block h-auto w-[min(100%,340px)] shrink-0"
-    src="/stocklee.svg"
-    alt=""
-  />
+  <Image
+          className="transform -translate-y-30 relative w-full max-w-[460px] shrink-0"
+          src="/logo-stockio.png"
+          alt="Stock.io"
+          width={421}
+          height={222}
+        />
+        <Image
+          className="transform -translate-y-35 block h-auto w-[min(100%,430px)] shrink-0"
+          src="/stocklee.svg"
+          alt=""
+          width={497}
+          height={799}
+        />
 </aside>
     </main>
   );

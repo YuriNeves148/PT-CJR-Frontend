@@ -145,7 +145,7 @@ function Cadastro() {
         }
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
-        className: `${__TURBOPACK__imported__module__$5b$next$5d2f$internal$2f$font$2f$google$2f$outfit_cf085c72$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].className} flex min-h-screen items-stretch gap-[6vw] overflow-hidden bg-[#f4f1e3] px-4 md:px-[6vw]`,
+        className: `${__TURBOPACK__imported__module__$5b$next$5d2f$internal$2f$font$2f$google$2f$outfit_cf085c72$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].className} flex min-h-screen items-stretch gap-[6vw] bg-[#f4f1e3] px-4 md:h-screen md:overflow-hidden md:px-[6vw]`,
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
                 className: "mt-[10.7vh] flex-1 rounded-t-[40px] bg-[#202020] px-6 pb-10 pt-14 text-[#f4f1e3] md:max-w-[710px] md:flex-none md:basis-[46.5%] md:rounded-t-[70px] md:px-20 md:pb-[60px] md:pt-[100px]",
@@ -335,29 +335,34 @@ function Cadastro() {
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
-                className: "hidden min-w-0 flex-1 flex-col items-center justify-between pt-[10.7vh] md:flex",
-                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
-                    className: "-mb-1 block h-auto w-[min(100%,440px)]",
-                    src: "/stocklee.svg",
-                    alt: ""
-                }, void 0, false, {
-                    fileName: "[project]/app/cadastro/page.tsx",
-                    lineNumber: 164,
-                    columnNumber: 9
-                }, this)
-            }, void 0, false, {
+                className: "mt-[10.7vh] hidden min-h-0 min-w-0 flex-1 flex-col items-center gap-8 overflow-hidden md:flex",
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                        className: "transform -translate-y-30 relative w-full max-w-[460px] shrink-0",
+                        src: "/logo-stockio.png",
+                        alt: "Stock.io",
+                        width: 421,
+                        height: 222
+                    }, void 0, false, {
+                        fileName: "[project]/app/cadastro/page.tsx",
+                        lineNumber: 163,
+                        columnNumber: 3
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                        className: "transform -translate-y-35 block h-auto w-[min(100%,430px)] shrink-0",
+                        src: "/stocklee.svg",
+                        alt: "",
+                        width: 497,
+                        height: 799
+                    }, void 0, false, {
+                        fileName: "[project]/app/cadastro/page.tsx",
+                        lineNumber: 170,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
                 fileName: "[project]/app/cadastro/page.tsx",
                 lineNumber: 162,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                src: "/logo-stockio.svg",
-                alt: "Stock.io",
-                width: 60,
-                height: 120
-            }, void 0, false, {
-                fileName: "[project]/app/cadastro/page.tsx",
-                lineNumber: 166,
                 columnNumber: 7
             }, this)
         ]
