@@ -1,0 +1,211 @@
+@import "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&display=swap";
+/* [project]/app/cadastro/cadastro.css [app-client] (css) */
+.cadastro {
+  --creme: #f4f1e3;
+  --escuro: #202020;
+  --roxo: #5e3dec;
+  --campo-texto: #7a7a72;
+  box-sizing: border-box;
+  background: var(--creme);
+  align-items: stretch;
+  gap: 6vw;
+  min-height: 100vh;
+  padding: 0 6vw;
+  font-family: Outfit, sans-serif;
+  display: flex;
+  overflow: hidden;
+}
+
+.cadastro *, .cadastro :before, .cadastro :after {
+  box-sizing: border-box;
+}
+
+.cadastro .cadastro__card {
+  background: var(--escuro);
+  color: var(--creme);
+  border-radius: 70px 70px 0 0;
+  flex: 0 0 min(46.5%, 710px);
+  margin-top: 10.7vh;
+  padding: 100px 80px 60px;
+}
+
+.cadastro .cadastro__titulo {
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: .01em;
+  color: var(--creme);
+  margin: 0 0 48px;
+  font-family: Outfit, sans-serif;
+  font-size: clamp(1.8rem, 2.6vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.cadastro .cadastro__form {
+  flex-direction: column;
+  gap: 16px;
+  display: flex;
+}
+
+.cadastro .campo {
+  background: var(--creme);
+  width: 100%;
+  height: 52px;
+  color: var(--escuro);
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  margin: 0;
+  padding: 0 36px;
+  font-family: Outfit, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 300;
+  display: block;
+}
+
+.cadastro .campo::placeholder {
+  color: var(--campo-texto);
+  opacity: 1;
+}
+
+.cadastro .campo:focus-visible {
+  outline: 3px solid var(--roxo);
+  outline-offset: 2px;
+}
+
+.cadastro .campo-senha {
+  position: relative;
+}
+
+.cadastro .campo-senha .campo {
+  padding-right: 68px;
+}
+
+.cadastro .campo-senha__olho {
+  width: 36px;
+  height: 36px;
+  color: var(--campo-texto);
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+}
+
+.cadastro .campo-senha__olho:focus-visible {
+  outline: 2px solid var(--roxo);
+}
+
+.cadastro .campo-senha__olho svg {
+  fill: none;
+  stroke: currentColor;
+  flex: none;
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.cadastro .cadastro__erro {
+  text-align: center;
+  color: #ff8a8a;
+  margin: 0;
+  font-size: .95rem;
+}
+
+.cadastro .cadastro__botao {
+  background: var(--roxo);
+  width: 100%;
+  height: 56px;
+  color: var(--creme);
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  border-radius: 999px;
+  margin: 28px 0 0;
+  padding: 0;
+  font-family: Outfit, sans-serif;
+  font-size: 1.4rem;
+  font-weight: 500;
+  transition: filter .15s;
+}
+
+.cadastro .cadastro__botao:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.cadastro .cadastro__botao:disabled {
+  opacity: .6;
+  cursor: default;
+}
+
+.cadastro .cadastro__botao:focus-visible {
+  outline: 3px solid var(--creme);
+  outline-offset: 3px;
+}
+
+.cadastro .cadastro__login {
+  color: var(--creme);
+  margin: 28px 0 0;
+  font-size: 1.25rem;
+  font-weight: 300;
+}
+
+.cadastro .cadastro__login a {
+  color: var(--roxo);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.cadastro .cadastro__login a:hover {
+  text-decoration: underline;
+}
+
+.cadastro .cadastro__lado {
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+  padding-top: 10.7vh;
+  display: flex;
+}
+
+.cadastro .cadastro__logo {
+  width: min(100%, 480px);
+  height: auto;
+  display: block;
+}
+
+.cadastro .cadastro__personagem {
+  width: min(100%, 430px);
+  height: auto;
+  margin-bottom: -4px;
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .cadastro {
+    padding: 0 16px;
+  }
+
+  .cadastro .cadastro__card {
+    border-radius: 40px 40px 0 0;
+    flex: 1;
+    padding: 56px 24px 40px;
+  }
+
+  .cadastro .cadastro__lado {
+    display: none;
+  }
+}
+
+/*# sourceMappingURL=app_cadastro_cadastro_0vu-w7b.css.map*/

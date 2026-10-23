@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["turbopack:///[next]/internal/font/google/outfit_cf085c72.js"],"sourcesContent":["import cssModule from \"@vercel/turbopack-next/internal/font/google/cssmodule.module.css?{%22path%22:%22page.tsx%22,%22import%22:%22Outfit%22,%22arguments%22:[{%22subsets%22:[%22latin%22],%22weight%22:[%22300%22,%22500%22,%22800%22]}],%22variableName%22:%22outfit%22}\";\nconst fontData = {\n    className: cssModule.className,\n    style: {\n        fontFamily: \"'Outfit', 'Outfit Fallback'\",\n        fontStyle: \"normal\",\n\n    },\n};\n\nif (cssModule.variable != null) {\n    fontData.variable = cssModule.variable;\n}\n\nexport default fontData;\n"],"names":["fontData","className","style","fontFamily","fontStyle","variable"],"mappings":";;;;AAAA;;AACA,MAAMA,WAAW;IACbC,WAAW,oKAAS,CAACA,SAAS;IAC9BC,OAAO;QACHC,YAAY;QACZC,WAAW;IAEf;AACJ;AAEA,IAAI,oKAAS,CAACC,QAAQ,IAAI,MAAM;IAC5BL,SAASK,QAAQ,GAAG,oKAAS,CAACA,QAAQ;AAC1C;uCAEeL","ignoreList":[0]}},
+    {"offset": {"line": 24, "column": 0}, "map": {"version":3,"sources":["turbopack:///[next]/internal/font/google/outfit_cf085c72.module.css [app-client] (css module)"],"sourcesContent":["__turbopack_context__.v({\n  \"className\": \"outfit_cf085c72-module__aZMtOa__className\",\n});\n"],"names":[],"mappings":"AAAA;AACA;AACA","ignoreList":[0]}}]
+}
