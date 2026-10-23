@@ -2,18 +2,55 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function LoginPage() {
   const[email, setEmail] = useState("");
   const[senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mensagem, setMensagem] = useState("");
+  const [carregando, setCarregando] = useState(false);
   function exibirSenha(): void{
     setMostrarSenha(!mostrarSenha);
   }
-  function enviarLogin(event: FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
-    console.log(email);
+
+async function enviarLogin(event: FormEvent<HTMLFormElement>): Promise<void> {
+  event.preventDefault();
+  setMensagem("");
+  setCarregando(true);
+
+  try {
+    const resposta = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, senha }),
+    });
+
+    if (!resposta.ok) {
+      if (resposta.status === 401) {
+        setMensagem("E-mail ou senha incorretos.");
+      } else if (resposta.status >= 500) {
+        setMensagem("Servidor indisponível ou ocorreu um erro. Tente novamente.");
+      } else {
+        setMensagem("Não foi possível realizar o login.");
+      }
+      return;
+    }
+
+    const dados = await resposta.json();
+
+    if (dados.sucesso === true) {
+      console.log("Login realizado com sucesso!");
+    }
+  } catch (erro) {
+    console.error("Erro ao conectar com o backend:", erro);
+    setMensagem("Erro de conexão com o servidor. Tente novamente.");
+  } finally {
+  setCarregando(false);
   }
+
+}
+
   return (
     
     <main className="min-h-screen bg-[#f7f4e8] grid grid-cols-2 pl-8 pr-15">
@@ -36,9 +73,12 @@ export default function LoginPage() {
                 </button>
               </div>
               <button type="button" className="text-white text-center text-sm hover:underline mt-3 cursor-pointer">Esqueceu sua senha?</button>
-            <button type="submit" className="bg-[#7137f5] text-white w-full px-5 py-3 rounded-full cursor-pointer mt-5 font-semibold hover:bg-[#8755ff] transition-colors">ENTRAR</button>
+            <button type="submit" disabled={carregando} className="bg-[#7137f5] text-white w-full px-5 py-3 rounded-full cursor-pointer mt-5 font-semibold hover:bg-[#8755ff] transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+              {carregando ? "ENTRANDO..." : "ENTRAR"}
+            </button>
+            {mensagem && <p className="text-red-500 text-sm mt-2">{mensagem}</p>}
           </form>  
-        <p className="mt-5 text-left">Não tem uma conta? <button className="text-[#7137f5] hover:underline cursor-pointer">Cadastre-se</button></p>
+        <p className="mt-5 text-left">Não tem uma conta? <Link href="/cadastro" className="text-[#7137f5] hover:underline cursor-pointer">Cadastre-se</Link></p>
       </section>
     </main>
   );
