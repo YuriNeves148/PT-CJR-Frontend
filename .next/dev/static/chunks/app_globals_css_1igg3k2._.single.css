@@ -42,8 +42,11 @@
     --color-white: #fff;
     --spacing: .25rem;
     --container-xs: 20rem;
+    --container-sm: 24rem;
     --container-md: 28rem;
     --container-3xl: 48rem;
+    --text-sm: .875rem;
+    --text-sm--line-height: calc(1.25 / .875);
     --text-base: 1rem;
     --text-base--line-height: calc(1.5 / 1);
     --text-lg: 1.125rem;
@@ -53,6 +56,7 @@
     --font-weight-light: 300;
     --font-weight-medium: 500;
     --font-weight-semibold: 600;
+    --font-weight-bold: 700;
     --font-weight-extrabold: 800;
     --tracking-tight: -.025em;
     --default-transition-duration: .15s;
@@ -336,8 +340,28 @@
     top: 50%;
   }
 
+  .top-3 {
+    top: calc(var(--spacing) * 3);
+  }
+
+  .right-3 {
+    right: calc(var(--spacing) * 3);
+  }
+
   .right-5 {
     right: calc(var(--spacing) * 5);
+  }
+
+  .mt-3 {
+    margin-top: calc(var(--spacing) * 3);
+  }
+
+  .mt-4 {
+    margin-top: calc(var(--spacing) * 4);
+  }
+
+  .mt-5 {
+    margin-top: calc(var(--spacing) * 5);
   }
 
   .mt-7 {
@@ -346,6 +370,10 @@
 
   .mt-\[10\.7vh\] {
     margin-top: 10.7vh;
+  }
+
+  .mb-4 {
+    margin-bottom: calc(var(--spacing) * 4);
   }
 
   .mb-12 {
@@ -358,6 +386,10 @@
 
   .flex {
     display: flex;
+  }
+
+  .grid {
+    display: grid;
   }
 
   .hidden {
@@ -422,6 +454,10 @@
     width: 100px;
   }
 
+  .w-\[450px\] {
+    width: 450px;
+  }
+
   .w-\[min\(100\%\,430px\)\] {
     width: min(100%, 430px);
   }
@@ -438,8 +474,16 @@
     max-width: 460px;
   }
 
+  .max-w-full {
+    max-width: 100%;
+  }
+
   .max-w-md {
     max-width: var(--container-md);
+  }
+
+  .max-w-sm {
+    max-width: var(--container-sm);
   }
 
   .max-w-xs {
@@ -481,6 +525,10 @@
     cursor: pointer;
   }
 
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .flex-col {
     flex-direction: column;
   }
@@ -507,6 +555,10 @@
 
   .gap-4 {
     gap: calc(var(--spacing) * 4);
+  }
+
+  .gap-5 {
+    gap: calc(var(--spacing) * 5);
   }
 
   .gap-6 {
@@ -562,12 +614,24 @@
     background-color: #5e3dec;
   }
 
+  .bg-\[\#7137f5\] {
+    background-color: #7137f5;
+  }
+
+  .bg-\[\#171917\] {
+    background-color: #171917;
+  }
+
   .bg-\[\#202020\] {
     background-color: #202020;
   }
 
   .bg-\[\#f4f1e3\] {
     background-color: #f4f1e3;
+  }
+
+  .bg-\[\#f7f4e8\] {
+    background-color: #f7f4e8;
   }
 
   .bg-black\/\[\.06\] {
@@ -590,6 +654,10 @@
 
   .bg-zinc-50 {
     background-color: var(--color-zinc-50);
+  }
+
+  .p-10 {
+    padding: calc(var(--spacing) * 10);
   }
 
   .px-1\.5 {
@@ -620,12 +688,20 @@
     padding-block: calc(var(--spacing) * .5);
   }
 
+  .py-3 {
+    padding-block: calc(var(--spacing) * 3);
+  }
+
   .py-32 {
     padding-block: calc(var(--spacing) * 32);
   }
 
   .pt-14 {
     padding-top: calc(var(--spacing) * 14);
+  }
+
+  .pr-15 {
+    padding-right: calc(var(--spacing) * 15);
   }
 
   .pr-\[68px\] {
@@ -636,8 +712,16 @@
     padding-bottom: calc(var(--spacing) * 10);
   }
 
+  .pl-8 {
+    padding-left: calc(var(--spacing) * 8);
+  }
+
   .text-center {
     text-align: center;
+  }
+
+  .text-left {
+    text-align: left;
   }
 
   .font-mono {
@@ -661,6 +745,11 @@
   .text-lg {
     font-size: var(--text-lg);
     line-height: var(--tw-leading, var(--text-lg--line-height));
+  }
+
+  .text-sm {
+    font-size: var(--text-sm);
+    line-height: var(--tw-leading, var(--text-sm--line-height));
   }
 
   .text-\[0\.9em\] {
@@ -702,6 +791,11 @@
     line-height: 1.1;
   }
 
+  .font-bold {
+    --tw-font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-bold);
+  }
+
   .font-extrabold {
     --tw-font-weight: var(--font-weight-extrabold);
     font-weight: var(--font-weight-extrabold);
@@ -740,12 +834,20 @@
     color: #7a7a72;
   }
 
+  .text-\[\#7137f5\] {
+    color: #7137f5;
+  }
+
   .text-\[\#202020\] {
     color: #202020;
   }
 
   .text-\[\#f4f1e3\] {
     color: #f4f1e3;
+  }
+
+  .text-\[\#f7f4e8\] {
+    color: #f7f4e8;
   }
 
   .text-\[\#ff8a8a\] {
@@ -758,6 +860,10 @@
 
   .text-black {
     color: var(--color-black);
+  }
+
+  .text-white {
+    color: var(--color-white);
   }
 
   .text-zinc-600 {
@@ -796,6 +902,10 @@
   @media (hover: hover) {
     .hover\:border-transparent:hover {
       border-color: #0000;
+    }
+
+    .hover\:bg-\[\#8755ff\]:hover {
+      background-color: #8755ff;
     }
 
     .hover\:bg-\[\#383838\]:hover {
