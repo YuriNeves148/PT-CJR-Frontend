@@ -1,10 +1,11 @@
 "use client";
-
+import { createUser } from '../service/userService';
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Outfit } from "next/font/google";
 import Image from "next/image";
+import axios from "axios";
 
 const outfit = Outfit({ subsets: ["latin"], weight: ["300", "500", "800"] });
 
@@ -70,27 +71,25 @@ export default function Cadastro() {
 
     setEnviando(true);
     try {
-      const resposta = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          //nomes do DTO do backend
-          nomeCompleto: form.nomeCompleto,
-          username: form.username,
-          email: form.email,
-          senha: form.senha,
-        }),
+      await createUser({
+        nome: form.nomeCompleto,
+        username: form.username,
+        email: form.email,
+        senha: form.senha,
       });
-
-      if (!resposta.ok) {
-        const dados = await resposta.json().catch(() => null);
-        const mensagem = Array.isArray(dados?.message) ? dados.message[0] : dados?.message;
-        throw new Error(mensagem || "Não foi possível criar a conta. Tente novamente.");
-      }
 
       router.push("/login");
     } catch (err) {
-      setErro(err instanceof Error ? err.message : "Erro inesperado.");
+      if (axios.isAxiosError(err)) {
+        const msg = err.response?.data?.message;
+        setErro(
+          Array.isArray(msg)
+            ? msg[0]
+            : msg ?? "Não foi possível conectar ao servidor."
+        );
+      } else {
+        setErro("Erro inesperado.");
+      }
     } finally {
       setEnviando(false);
     }
