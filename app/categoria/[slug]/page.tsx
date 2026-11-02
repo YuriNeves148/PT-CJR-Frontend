@@ -70,7 +70,6 @@ export default function CategoriaPage() {
             <br />
             em um só lugar
           </h1>
-          {/* Como na referência, o stockles aparece só da cintura pra cima: o resto é cortado */}
           <div className="h-[300px] w-[200px] shrink-0 overflow-hidden pt-3 md:h-[340px] md:w-[230px]">
             <img
               src="/stockles.png"
@@ -81,16 +80,30 @@ export default function CategoriaPage() {
         </div>
       </section>
 
-      {/* CONTEÚDO */}
       <main className="mx-auto max-w-[1200px] px-6 pb-12 pt-4 md:px-[7vw]">
         <div className="mb-3.5 flex justify-end">
-          <input
-            type="text"
-            placeholder="Procurar por..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            className="w-full max-w-[330px] rounded-full bg-white px-[18px] py-2 text-xs text-neutral-800 outline-none placeholder:text-[#8b78d6] focus-visible:ring-2 focus-visible:ring-[#6c3df0]"
-          />
+          <div className="relative w-full max-w-[330px]">
+            <input
+              type="text"
+              placeholder="Procurar por..."
+              aria-label="Procurar produtos"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="w-full rounded-full bg-white py-2 pl-[18px] pr-10 text-xs text-neutral-800 outline-none placeholder:text-[#8b78d6] focus-visible:ring-2 focus-visible:ring-[#6c3df0]"
+            />
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8b78d6]"
+            >
+              <circle cx="10.5" cy="10.5" r="6.5" />
+              <path d="M15.5 15.5 21 21" />
+            </svg>
+          </div>
         </div>
 
         <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
@@ -110,16 +123,31 @@ export default function CategoriaPage() {
             ))}
           </div>
 
-          <select
-            value={ordem}
-            onChange={(e) => setOrdem(e.target.value)}
-            className="w-64 max-w-full cursor-pointer rounded-full bg-white px-5 py-2 text-base text-[#8b78d6] focus-visible:ring-2 focus-visible:ring-[#6c3df0]"
-          >
-            <option value="">ordenar por</option>
-            <option value="menor">Menor preço</option>
-            <option value="maior">Maior preço</option>
-            <option value="nome">Nome (A-Z)</option>
-          </select>
+          <div className="relative w-64 max-w-full">
+            <select
+              value={ordem}
+              onChange={(e) => setOrdem(e.target.value)}
+              aria-label="Ordenar produtos"
+              className="w-full cursor-pointer appearance-none rounded-full bg-white py-2 pl-5 pr-12 text-base text-[#8b78d6] outline-none focus-visible:ring-2 focus-visible:ring-[#6c3df0]"
+            >
+              <option value="">ordenar por</option>
+              <option value="menor">Menor preço</option>
+              <option value="maior">Maior preço</option>
+              <option value="nome">Nome (A-Z)</option>
+            </select>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8b78d6]"
+            >
+              <path d="m5 9 7 7 7-7" />
+            </svg>
+          </div>
         </div>
 
         <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
