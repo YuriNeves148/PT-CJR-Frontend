@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type { FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,6 +10,15 @@ export default function LoginPage() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  // editar senha
+  const [senhaAntiga, setSenhaAntiga] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [mostrarAntiga, setMostrarAntiga] = useState(false);
+  const [mostrarNova, setMostrarNova] = useState(false);
+  const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
+
   function exibirSenha(): void {
     setMostrarSenha(!mostrarSenha);
   }
@@ -52,6 +61,15 @@ export default function LoginPage() {
     }
   }
 
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  function limpa_input() {
+    dialogRef.current?.close();
+
+    // limpa o texto dos campos
+    setSenhaAntiga("");
+    setNovaSenha("");
+    setConfirmarSenha("");
+  }
   return (
     <main className="min-h-screen bg-[#f7f4e8] grid grid-cols-2 pl-8 pr-15">
       <section className="flex flex-col items-center gap-5 ">
@@ -103,7 +121,7 @@ export default function LoginPage() {
           >
             Senha
           </label>
-          <div className="relative">
+          <div className="relative w-100">
             <input
               required
               id="password"
@@ -136,11 +154,119 @@ export default function LoginPage() {
             </button>
           </div>
           <button
-            type="button"
             className="text-white text-center text-sm hover:underline mt-3 cursor-pointer"
+            type="button"
+            onClick={() => dialogRef.current?.showModal()}
           >
             Esqueceu sua senha?
           </button>
+
+          {/* popup */}
+          <dialog
+            ref={dialogRef}
+            className="open:flex flex-col  rounded-4xl p-6 m-auto bg-[#EDEDED] w-180 h-200 backdrop:bg-black/60"
+          >
+            <button
+              className="self-end mt-20 mr-10 cursor-pointer"
+              type="button"
+              onClick={limpa_input}
+            >
+              <Image
+                src="/img_esq_senha/x_fechar.png"
+                alt="Fechar"
+                width={32}
+                height={32}
+                className="w-8 h-8"
+              />
+            </button>
+            <Image
+              src="/img_esq_senha/chave.png"
+              alt=""
+              width={1000}
+              height={1000}
+              className="self-center w-38 h-38 mb-10"
+            ></Image>
+
+            {/* senha antiga */}
+            <div className="relative w-100 self-center">
+              <input
+                placeholder="Senha Antiga"
+                type={mostrarAntiga ? "text" : "password"}
+                value={senhaAntiga}
+                onChange={(e) => setSenhaAntiga(e.target.value)}
+                className="bg-[#FFFFFF] m-3 w-full rounded-2xl pl-5 pr-14 text-2xl p-2"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarAntiga(!mostrarAntiga)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
+              >
+                <Image
+                  src="/images/iconamoon_eye-thin.png"
+                  alt={mostrarAntiga ? "Ocultar senha" : "Mostrar senha"}
+                  width={24}
+                  height={24}
+                  className={mostrarAntiga ? "opacity-100" : "opacity-50"}
+                />
+              </button>
+            </div>
+
+            {/* nova senha */}
+            <div className="relative w-100 self-center">
+              <input
+                placeholder="Nova Senha"
+                type={mostrarNova ? "text" : "password"}
+                value={novaSenha}
+                onChange={(e) => setNovaSenha(e.target.value)}
+                className="bg-[#FFFFFF] m-3 w-full rounded-2xl pl-5 pr-14 text-2xl p-2"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarNova(!mostrarNova)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
+              >
+                <Image
+                  src="/images/iconamoon_eye-thin.png"
+                  alt={mostrarNova ? "Ocultar senha" : "Mostrar senha"}
+                  width={24}
+                  height={24}
+                  className={mostrarNova ? "opacity-100" : "opacity-50"}
+                />
+              </button>
+            </div>
+
+            {/* Confirmar senha */}
+            <div className="relative w-100 self-center">
+              <input
+                placeholder="Confirmar Senha"
+                type={mostrarConfirmar ? "text" : "password"}
+                value={confirmarSenha}
+                onChange={(e) => setConfirmarSenha(e.target.value)}
+                className="bg-[#FFFFFF] m-3 w-full rounded-2xl pl-5 pr-14 text-2xl p-2"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarConfirmar(!mostrarConfirmar)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
+              >
+                <Image
+                  src="/images/iconamoon_eye-thin.png"
+                  alt={mostrarConfirmar ? "Ocultar senha" : "Mostrar senha"}
+                  width={24}
+                  height={24}
+                  className={mostrarConfirmar ? "opacity-100" : "opacity-50"}
+                />
+              </button>
+            </div>
+            <button
+              type="button"
+              className="bg-[#6A38F3] cursor-pointer self-center text-white m-5 w-100 rounded-2xl mt-10 text-2xl p-3"
+              onClick={() => {}}
+            >
+              Salvar Senha
+            </button>
+          </dialog>
+
           <Link
             href="/feed"
             className="font-medium bg-[#5e3dec] text-[white] hover:underline flex flex-row justify-center"

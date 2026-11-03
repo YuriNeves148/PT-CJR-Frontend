@@ -7,7 +7,7 @@ export default function home() {
   return (
     <main className="h-135 ">
       <nav className="flex w-screen h-22 bg-[#000000] p-3">
-        <Link href="">
+        <Link href="/feed">
           <Image
             src="/img_feed/LOGO Stock.io.png"
             alt="Logotipo da STOCK"
