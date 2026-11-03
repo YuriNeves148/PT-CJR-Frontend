@@ -176,7 +176,7 @@ export default function LoginPage() {
                 alt="Fechar"
                 width={32}
                 height={32}
-                className="w-8 h-8"
+                className="w-8 h-8 hover:w-9"
               />
             </button>
             <Image
@@ -260,7 +260,7 @@ export default function LoginPage() {
             </div>
             <button
               type="button"
-              className="bg-[#6A38F3] cursor-pointer self-center text-white m-5 w-100 rounded-2xl mt-10 text-2xl p-3"
+              className="bg-[#6A38F3] cursor-pointer hover:bg-[#8c77e6] self-center text-white m-5 w-100 rounded-2xl mt-10 text-2xl p-3"
               onClick={() => {}}
             >
               Salvar Senha
