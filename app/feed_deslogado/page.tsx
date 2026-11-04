@@ -1,31 +1,100 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
+import { useRef, useState, ChangeEvent } from "react";
 
-export default function home() {
-  const disponivel = false;
+function FotoPerfil({
+  preview,
+  setPreview,
+}: {
+  preview: string | null;
+  setPreview: (url: string | null) => void;
+}) {
+  function handleChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (preview) URL.revokeObjectURL(preview);
+      setPreview(URL.createObjectURL(file));
+    }
+    e.target.value = ""; // permite escolher o mesmo arquivo de novo
+  }
 
   return (
-    <main className="h-135 ">
+    <span className="flex flex-col justify-center items-center">
+      <label
+        htmlFor="foto-perfil"
+        className="w-38 h-38 mb-2 rounded-full bg-black text-white cursor-pointer hover:opacity-85 flex items-center justify-center overflow-hidden text-center text-sm"
+      >
+        {preview ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={preview}
+            alt="Foto de perfil"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          "Adicione uma foto"
+        )}
+      </label>
+
+      <input
+        id="foto-perfil"
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleChange}
+      />
+      <p className="flex flex-col mb-15 self-center">editar foto</p>
+    </span>
+  );
+}
+
+export default function Home() {
+  const disponivel = false;
+  const [nome, setNome] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [preview, setPreview] = useState<string | null>(null);
+
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  // limpa tudo: roda ao fechar pelo X, pelo ESC ou por qualquer outro meio
+  function limparCampos() {
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(null);
+    setNome("");
+    setUsername("");
+    setEmail("");
+  }
+
+  function fechar_popup() {
+    dialogRef.current?.close(); // dispara o onClose do <dialog>, que chama limparCampos
+  }
+
+  return (
+    <main className="w-full overflow-x-hidden">
       <nav className="flex w-screen h-22 bg-[#000000] p-3">
         <Link href="/feed">
           <Image
             src="/img_feed/LOGO Stock.io.png"
             alt="Logotipo da STOCK"
-            width={300}
-            height={100}
-
-            className="pl-15 p-2 m-1 cursor-pointer opacity-100 hover:opacity-50 transition-opacity duration-200"
+            width={1000}
+            height={1000}
+            className="shadow-xl shadow-gray-700/50 rounded-2xl ml-15 p-2 m-1 w-70 h-18 transition-500 cursor-pointer hover:opacity-50 transition-opacity "
           />
         </Link>
         <nav className="ml-auto flex flex-row-reverse gap-x-13 items-center pr-30 bg-[#000000]">
           <Link
             href="/cadastro"
-            className="text-2xl bg-[#6A38F3] p-1 pr-8 pl-8 rounded-4xl font-bold hover:bg-white hover:text-[#6A38F3]"
+            className="hover:m-2 duration-200 text-2xl bg-[#6A38F3] p-1 pr-8 pl-8 rounded-4xl font-bold hover:bg-white hover:text-[#6A38F3]"
           >
             CADASTRE-SE
           </Link>
 
-          <Link href="/login" className="text-2xl hover:text-[#6A38F3]">
+          <Link
+            href="/login"
+            className="text-2xl hover:text-[#6A38F3] hover:m-2 duration-200 hover:bg-white px-6 rounded-full"
+          >
             LOGIN
           </Link>
           <Link href="">
@@ -34,7 +103,7 @@ export default function home() {
               alt="loja"
               width={400}
               height={500}
-              className="w-11 h-10 cursor-pointer duration-200 hover:bg-[#6A38F3] rounded-full"
+              className="w-11 h-10 hover:m-2 duration-200 cursor-pointer duration-200 hover:bg-[#6A38F3] rounded-full"
             />
           </Link>
           <Link href="">
@@ -43,7 +112,7 @@ export default function home() {
               alt="carrinho"
               width={40}
               height={50}
-              className="w-11 h-10  cursor-pointer hover:bg-[#6A38F3] rounded-full"
+              className="w-11 h-10 hover:m-2 duration-200 cursor-pointer hover:bg-[#6A38F3] rounded-full"
             />
           </Link>
         </nav>
@@ -64,6 +133,7 @@ export default function home() {
         />
       </div>
 
+      {/* INFO.DE CATEGORIAS */}
       <div className="bg-[#F6F3E4] relative z-10 h-auto w-screen -mt-67">
         <div className=" w-330 pt-10 justify-self-center ">
           <input
@@ -77,59 +147,11 @@ export default function home() {
               alt="mercado"
               width={100}
               height={100}
-              className="w-30 h-30 shrink-0"
-            />
-            <Image
-              src="/img_feed/farmacia.png"
-              alt="farmacia"
-              width={100}
-              height={100}
-              className="w-30 h-30 shrink-0"
-            />
-            <Image
-              src="/img_feed/farmacia.png"
-              alt="farmacia"
-              width={100}
-              height={100}
-              className="w-30 h-30 shrink-0"
-            />
-            <Image
-              src="/img_feed/beleza.png"
-              alt="beleza"
-              width={100}
-              height={100}
-              className="w-30 h-30 shrink-0"
-            />
-            <Image
-              src="/img_feed/moda.png"
-              alt="moda"
-              width={100}
-              height={100}
-              className="w-30 h-30 shrink-0"
-            />
-            <Image
-              src="/img_feed/eletronicos.png"
-              alt="eletronicos"
-              width={100}
-              height={100}
-              className="w-30 h-30 shrink-0"
-            />
-            <Image
-              src="/img_feed/brinquedos.png"
-              alt="brinquedos"
-              width={100}
-              height={100}
-              className="w-30 h-30 rounded-4xl shrink-0"
-            />
-            <Image
-              src="/img_feed/casa.jpg"
-              alt="casa"
-              width={100}
-              height={100}
-              className="w-30 h-30 rounded-4xl shrink-0"
+              className="w-30 h-30 shrink-0 object-cover"
             />
           </nav>
 
+          {/* INFO. DE PRODUTOS */}
           <div>
             <details className="peer">
               <summary className="flex cursor-pointer list-none items-end [&::-webkit-details-marker]:hidden">
@@ -145,96 +167,28 @@ export default function home() {
               <span className="bg-[#FFFFFF] p-5 pb-11 shrink-0 rounded-2xl w-65 flex flex-col items-center">
                 <Image
                   src="/img_feed/prd_relogio.png"
-                  alt="mercado"
+                  alt="relógio"
                   width={100}
                   height={100}
-                  className="w-44 h-44 shrink-0"
+                  className="w-30 h-30 shrink-0 object-cover"
                 />
                 <div className="pt-5 mr-auto">
-                  <p className="text-black font-bold text-2xl">titulo</p>
-                  <p className="text-black font-bold text-2xl">R$ preço</p>
-                  <p
-                    className={`font-bold text-2xl ${disponivel ? "text-green-600" : "text-red-600"}`}
-                  >
-                    {disponivel ? "Disponível" : "Indisponível"}
-                  </p>{" "}
-                </div>
-              </span>
-              <span className="bg-[#FFFFFF] p-5 pb-11 shrink-0 rounded-2xl w-60 flex flex-col items-center">
-                <Image
-                  src="/img_feed/prd_computador.png"
-                  alt="mercado"
-                  width={100}
-                  height={100}
-                  className="w-44 h-44 shrink-0"
-                />
-                <div className="pt-5 mr-auto">
-                  <p className="text-black font-bold text-2xl">titulo</p>
-                  <p className="text-black font-bold text-2xl">R$ preço</p>
-                  <p
-                    className={`font-bold text-2xl ${disponivel ? "text-green-600" : "text-red-600"}`}
-                  >
-                    {disponivel ? "Disponível" : "Indisponível"}
-                  </p>{" "}
-                </div>
-              </span>
-              <span className="bg-[#FFFFFF] p-5 pb-11 shrink-0 rounded-2xl w-60 flex flex-col items-center">
-                <Image
-                  src="/img_feed/prd_caixa.png"
-                  alt="mercado"
-                  width={100}
-                  height={100}
-                  className="w-44 h-44 shrink-0"
-                />
-                <div className="pt-5 mr-auto">
-                  <p className="text-black font-bold text-2xl">titulo</p>
-                  <p className="text-black font-bold text-2xl">R$ preço</p>
-                  <p
-                    className={`font-bold text-2xl ${disponivel ? "text-green-600" : "text-red-600"}`}
-                  >
-                    {disponivel ? "Disponível" : "Indisponível"}
-                  </p>{" "}
-                </div>
-              </span>
-              <span className="bg-[#FFFFFF] p-5 pb-11 shrink-0 rounded-2xl w-60 flex flex-col items-center">
-                <Image
-                  src="/img_feed/prd_relogio.png"
-                  alt="mercado"
-                  width={100}
-                  height={100}
-                  className="w-44 h-44 shrink-0"
-                />
-                <div className="pt-5 mr-auto">
-                  <p className="text-black font-bold text-2xl">titulo</p>
-                  <p className="text-black font-bold text-2xl">R$ preço</p>
-                  <p
-                    className={`font-bold text-2xl ${disponivel ? "text-green-600" : "text-red-600"}`}
-                  >
-                    {disponivel ? "Disponível" : "Indisponível"}
-                  </p>{" "}
-                </div>
-              </span>
-              <span className="bg-[#FFFFFF] p-5 pb-11 shrink-0 rounded-2xl w-60 flex flex-col items-center">
-                <Image
-                  src="/img_feed/prd_caixa.png"
-                  alt="mercado"
-                  width={100}
-                  height={100}
-                  className="w-44 h-44 shrink-0"
-                />
-                <div className="pt-5 mr-auto">
-                  <p className="text-black font-bold text-2xl">titulo</p>
-                  <p className="text-black font-bold text-2xl">R$ preço</p>
-                  <p
-                    className={`font-bold text-2xl ${disponivel ? "text-green-600" : "text-red-600"}`}
-                  >
-                    {disponivel ? "Disponível" : "Indisponível"}
+                  <p className="line-clamp-2 break-words text-black font-bold text-2xl">
+                    titulo
                   </p>
+                  <p className="text-black font-bold text-2xl">R$ preço</p>
+                  <p
+                    className={`font-bold text-2xl ${disponivel ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {disponivel ? "Disponível" : "Indisponível"}
+                    {/* está sendo pego da variavel global */}
+                  </p>{" "}
                 </div>
               </span>
             </nav>
           </div>
 
+          {/* INFO. DE LOJAS */}
           <div className="relative">
             <details className="peer ">
               <summary className="flex cursor-pointer  list-none items-end [&::-webkit-details-marker]:hidden">
@@ -261,15 +215,6 @@ export default function home() {
                       <input type="checkbox" name="categoria" value="mercado" />
                       Mercado
                     </label>
-
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        name="categoria"
-                        value="farmacia"
-                      />
-                      Farmácia
-                    </label>
                   </div>
                 </details>
                 <span className="ml-10 pr-10 text-blue-600 text-lg hover:text-blue-900">
@@ -279,95 +224,21 @@ export default function home() {
             </details>
 
             <nav className="flex flex-nowrap shrink-0 items-center gap-11 overflow-hidden pb-40 pt-10 peer-open:flex-wrap">
-              <span className="shrink-0 p-5">
+              <span className="shrink-0 p-5 max-w-48 flex flex-col items-center">
                 <Image
                   src="/img_feed/logo_amoca.png"
-                  alt="mercado"
+                  alt="loja amoca"
                   width={100}
                   height={100}
-                  className="w-30 h-30 shrink-0 rounded-full"
+                  className="w-30 h-30 shrink-0 rounded-full object-cover"
                 />
                 <div className="flex flex-col items-center pt-5">
-                  <p className="text-black text-3xl">titulo</p>
-                  <p className="text-blue-800 text-xl">categoria</p>
-                </div>
-              </span>
-              <span className="shrink-0 p-5">
-                <Image
-                  src="/img_feed/logo_cjr.png"
-                  alt="mercado"
-                  width={100}
-                  height={100}
-                  className="w-30 h-30 shrink-0 rounded-full"
-                />
-                <div className="flex flex-col items-center pt-5">
-                  <p className="text-black text-3xl">titulo</p>
-                  <p className="text-blue-800 text-xl">categoria</p>
-                </div>
-              </span>
-              <span className="shrink-0 p-5">
-                <Image
-                  src="/img_feed/logo_amoca.png"
-                  alt="mercado"
-                  width={100}
-                  height={100}
-                  className="w-30 h-30 shrink-0 rounded-full"
-                />
-                <div className="flex flex-col items-center pt-5">
-                  <p className="text-black text-3xl">titulo</p>
-                  <p className="text-blue-800 text-xl">categoria</p>
-                </div>
-              </span>
-              <span className="shrink-0 p-5">
-                <Image
-                  src="/img_feed/logo_cjr.png"
-                  alt="mercado"
-                  width={100}
-                  height={100}
-                  className="w-30 h-30 shrink-0 rounded-full"
-                />
-                <div className="flex flex-col items-center pt-5">
-                  <p className="text-black text-3xl">titulo</p>
-                  <p className="text-blue-800 text-xl">categoria</p>
-                </div>
-              </span>
-              <span className="shrink-0 p-5">
-                <Image
-                  src="/img_feed/logo_amoca.png"
-                  alt="mercado"
-                  width={100}
-                  height={100}
-                  className="w-30 h-30 shrink-0 rounded-full"
-                />
-                <div className="flex flex-col items-center pt-5">
-                  <p className="text-black text-3xl">titulo</p>
-                  <p className="text-blue-800 text-xl">categoria</p>
-                </div>
-              </span>
-              <span className="shrink-0 p-5">
-                <Image
-                  src="/img_feed/logo_cjr.png"
-                  alt="mercado"
-                  width={100}
-                  height={100}
-                  className="w-30 h-30 shrink-0 rounded-full"
-                />
-                <div className="flex flex-col items-center pt-5">
-                  <p className="text-black text-3xl">titulo</p>
-                  <p className="text-blue-800 text-xl">categoria</p>
-                </div>
-              </span>
-              <span className="shrink-0 p-5">
-                <Image
-                  src="/img_feed/logo_amoca.png"
-                  alt="mercado"
-                  width={100}
-                  height={100}
-                  className="w-30 h-30 shrink-0 rounded-full"
-                />
-                <div className="flex flex-col items-center pt-5">
-                  <p className="text-black text-3xl">titulo</p>
-                  <p className="text-blue-800 text-xl">categoria</p>
+                  <p className="text-black text-3xl text-center line-clamp-2 break-words">
+                    titulo
+                  </p>
+                  <p className="text-blue-800 text-xl text-center truncate max-w-full">
+                    categoria
+                  </p>
                 </div>
               </span>
             </nav>

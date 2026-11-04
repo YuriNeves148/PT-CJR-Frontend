@@ -72,28 +72,28 @@ export default function Home() {
   }
 
   return (
-    <main className="h-135 ">
+    <main className="w-full overflow-x-hidden">
       <nav className="flex w-screen h-22 bg-[#000000] p-3">
         <Link href="/feed">
           <Image
             src="/img_feed/LOGO Stock.io.png"
             alt="Logotipo da STOCK"
-            width={300}
-            height={100}
-            className="pl-15 p-2 m-1 cursor-pointer opacity-100 hover:opacity-50 transition-opacity duration-200"
+            width={1000}
+            height={1000}
+            className="shadow-xl shadow-gray-700/50 rounded-2xl ml-15 p-2 m-1 w-70 h-18 transition-500 cursor-pointer hover:opacity-50 transition-opacity "
           />
         </Link>
         <nav className="ml-auto flex flex-row-reverse gap-x-13 items-center pr-30 bg-[#000000]">
           <Link
             href="/feed_deslogado"
-            className="text-2xl  p-1 pr-8 pl-8 rounded-4xl font-bold hover:bg-[#6A38F3]"
+            className="text-2xl  p-1 pr-8 pl-8 rounded-4xl font-bold hover:bg-[#6A38F3] duration-200 hover:m-1"
           >
             <Image
               src="/img_feed/deslogar.png"
               alt="Sair"
               width={1000}
               height={1000}
-              className="w-11 h-10 cursor-pointer duration-200 rounded-full duration-200 hover:m-1"
+              className="w-11 h-10 cursor-pointer duration-200 hover:w-11 hover:h-11 rounded-full duration-200 "
             ></Image>
           </Link>
 
@@ -108,7 +108,7 @@ export default function Home() {
               alt="Editar perfil"
               width={1000}
               height={1000}
-              className="w-11 h-10 cursor-pointer duration-200 hover:bg-[#6A38F3] hover:m-2 rounded-full"
+              className="w-11 h-10 cursor-pointer duration-200 hover:bg-[#6A38F3] hover:w-11 hover:h-11 hover:m-2 rounded-full"
             ></Image>
           </button>
           <dialog
@@ -176,7 +176,7 @@ export default function Home() {
               alt="loja"
               width={400}
               height={500}
-              className="w-11 h-10 cursor-pointer duration-200 hover:bg-[#6A38F3] rounded-full duration-200 hover:m-2"
+              className="w-11 h-10 cursor-pointer duration-200 hover:bg-[#6A38F3] hover:w-11 hover:h-11 rounded-full duration-200 hover:m-2"
             />
           </Link>
           <Link href="">
@@ -185,7 +185,7 @@ export default function Home() {
               alt="carrinho"
               width={40}
               height={50}
-              className="w-11 h-10  cursor-pointer hover:bg-[#6A38F3] rounded-full duration-200 hover:m-2"
+              className="w-11 h-10  cursor-pointer hover:bg-[#6A38F3] rounded-full hover:w-11 hover:h-11 duration-200 hover:m-2"
             />
           </Link>
         </nav>
