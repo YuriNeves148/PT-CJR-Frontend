@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const resposta = await fetch("http://localhost:3000/me", {
+    const resposta = await fetch("http://localhost:3001/me", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
