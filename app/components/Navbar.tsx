@@ -82,7 +82,7 @@ export default function Navbar() {
           <>
             {/* Perfil */}
             <Link
-              href="/perfil"
+              href="/perfil_logado"
               aria-label="Meu perfil"
               className="group block"
             >
