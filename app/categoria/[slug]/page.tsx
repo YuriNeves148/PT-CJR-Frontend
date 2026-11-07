@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import Navbar from "@/app/components/Navbar";
 import {
   getCategorias,
   getProdutos,
@@ -60,7 +59,7 @@ export default function CategoriaPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f2e1]">
-      <Navbar />
+    
 
       {/* HERO */}
       <section className="overflow-hidden bg-black px-6 text-white md:px-[7vw]">
