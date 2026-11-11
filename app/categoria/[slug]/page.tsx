@@ -14,8 +14,19 @@ import {
 const formatarPreco = (valor: number) =>
   valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+// Todas as categorias usam o mesmo layout; só a frase e o mascote do topo mudam
+const HEROIS: Record<string, { titulo: string; imagem: string; alt: string }> = {
+  tecnologia: { titulo: "O universo da tecnologia", imagem: "/stockles.png", alt: "stockles segurando um celular" },
+  beleza: { titulo: "O universo da beleza", imagem: "/stocklee2.png", alt: "stocklee, mascote da Stock.io" },
+  mercado: { titulo: "O universo do mercado", imagem: "/stockles2-hero.png", alt: "stockles, mascote da Stock.io" },
+  farmacia: { titulo: "O universo da farmácia", imagem: "/stockles2-hero.png", alt: "stockles, mascote da Stock.io" },
+  moda: { titulo: "O universo da moda", imagem: "/stocklee2.png", alt: "stocklee, mascote da Stock.io" },
+  casa: { titulo: "O universo da casa", imagem: "/stockles2-hero.png", alt: "stockles, mascote da Stock.io" },
+};
+
 export default function CategoriaPage() {
   const { slug } = useParams<{ slug: string }>();
+  const hero = HEROIS[slug] ?? HEROIS.tecnologia;
 
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -63,17 +74,18 @@ export default function CategoriaPage() {
 
       {/* HERO */}
       <section className="overflow-hidden bg-black px-6 text-white md:px-[7vw]">
-        <div className="flex flex-col items-center gap-6 text-center md:flex-row md:items-end md:justify-center md:gap-4 md:text-right">
+        <div className="flex flex-col items-center gap-6 text-center md:flex-row md:items-end md:justify-center md:gap-8 md:text-right lg:gap-20">
           <h1 className="text-3xl font-semibold leading-tight md:self-center md:text-[44px]">
-            O universo da tecnologia
+            {hero.titulo}
             <br />
             em um só lugar
           </h1>
-          <div className="h-[300px] w-[200px] shrink-0 overflow-hidden pt-3 md:h-[340px] md:w-[230px]">
+          {/* Altura fixa (não largura) para todos os mascotes ficarem na mesma escala e cortados na cintura */}
+          <div className="h-[300px] shrink-0 overflow-hidden pt-3 md:h-[340px]">
             <img
-              src="/stockles.png"
-              alt="stockles segurando um celular"
-              className="h-auto w-full"
+              src={hero.imagem}
+              alt={hero.alt}
+              className="h-[516px] w-auto max-w-none [filter:drop-shadow(0_0_1px_#f5f2e1)_drop-shadow(0_0_1px_#f5f2e1)] md:h-[594px]"
             />
           </div>
         </div>
