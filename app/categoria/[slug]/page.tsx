@@ -70,7 +70,7 @@ export default function CategoriaPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f2e1]">
-      
+    
 
       {/* HERO */}
       <section className="overflow-hidden bg-black px-6 text-white md:px-[7vw]">
