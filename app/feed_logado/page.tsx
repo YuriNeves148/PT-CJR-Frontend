@@ -1,9 +1,47 @@
 "use client";
+import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+type Loja = {
+  id: number;
+  nome: string;
+  descricao?: string | null;
+  logo_url?: string | null;
+};
+
 export default function Home() {
   const disponivel = false;
+
+  const [lojas, setLojas] = useState<Loja[]>([]);
+  const [carregandoLojas, setCarregandoLojas] = useState(true);
+  const [erroLojas, setErroLojas] = useState("");
+
+  useEffect(() => {
+    async function carregarLojas() {
+      try {
+        const resposta = await fetch("/api/lojas");
+
+        if (resposta.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
+        if (!resposta.ok) {
+          setErroLojas("Não foi possível carregar as lojas.");
+          return;
+        }
+
+        const dados: Loja[] = await resposta.json();
+        setLojas(dados);
+      } catch {
+        setErroLojas("Erro de conexão com o servidor.");
+      } finally {
+        setCarregandoLojas(false);
+      }
+    }
+
+    carregarLojas();
+  }, []);
 
   return (
     <main className="w-full overflow-x-hidden">
@@ -114,23 +152,32 @@ export default function Home() {
             </details>
 
             <nav className="flex flex-nowrap shrink-0 items-center gap-11 overflow-hidden pb-40 pt-10 peer-open:flex-wrap">
-              <span className="shrink-0 p-5 max-w-48 flex flex-col items-center">
-                <Image
-                  src="/img_feed/logo_amoca.png"
-                  alt="loja amoca"
-                  width={100}
-                  height={100}
-                  className="w-30 h-30 shrink-0 rounded-full object-cover"
-                />
-                <div className="flex flex-col items-center pt-5">
-                  <p className="text-black text-3xl text-center line-clamp-2 break-words">
-                    titulo
-                  </p>
-                  <p className="text-blue-800 text-xl text-center truncate max-w-full">
-                    categoria
-                  </p>
-                </div>
-              </span>
+              {carregandoLojas ? (
+                <p className="text-black text-xl">Carregando lojas...</p>
+              ) : erroLojas ? (
+                <p className="text-red-600 text-xl">{erroLojas}</p>
+              ) : lojas.length === 0 ? (
+                <p className="text-black text-xl">Nenhuma loja cadastrada.</p>
+              ) : (
+                lojas.map((loja) => (
+                  <span
+                    key={loja.id}
+                    className="shrink-0 p-5 max-w-48 flex flex-col items-center"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={loja.logo_url || "/img_feed/loja_generica.jpg"}
+                      alt={`loja ${loja.nome}`}
+                      className="w-30 h-30 shrink-0 rounded-full object-cover"
+                    />
+                    <div className="flex flex-col items-center pt-5">
+                      <p className="text-black text-2xl text-center line-clamp-2 break-words">
+                        {loja.nome}
+                      </p>
+                    </div>
+                  </span>
+                ))
+              )}
             </nav>
           </div>
         </div>
