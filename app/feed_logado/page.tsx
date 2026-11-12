@@ -10,13 +10,36 @@ type Loja = {
   logo_url?: string | null;
 };
 
-export default function Home() {
-  const disponivel = false;
+type Categoria = {
+  id: number;
+  nome: string;
+  categoria_pai_id: number | null;
+};
+function gerarSlug(nome: string): string {
+  return nome.toLocaleLowerCase().normalize("NFD").trim();
+}
 
+type ImagemProduto = {
+  id: number;
+  produto_id: number;
+  url_imagem: string;
+  ordem: number;
+};
+
+type Produtos = {
+  id: number;
+  nome: string;
+  descricao: string | null;
+  preco: number;
+  estoque: number;
+  imagem: ImagemProduto[];
+};
+
+export default function Home() {
+  /* para LOJAS */
   const [lojas, setLojas] = useState<Loja[]>([]);
   const [carregandoLojas, setCarregandoLojas] = useState(true);
   const [erroLojas, setErroLojas] = useState("");
-
   useEffect(() => {
     async function carregarLojas() {
       try {
@@ -41,6 +64,62 @@ export default function Home() {
     }
 
     carregarLojas();
+  }, []);
+
+  /* para CATEGORIAS */
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [carregandoCategorias, setCarregandoCategorias] = useState(true);
+  const [erroCategorias, setErroCategorias] = useState("");
+  useEffect(() => {
+    async function carregarCategorias() {
+      try {
+        const resposta = await fetch("/api/categorias");
+
+        if (!resposta.ok) {
+          setErroCategorias("Não foi possível carregar as categorias.");
+          return;
+        }
+
+        const dados: Categoria[] = await resposta.json();
+        setCategorias(dados.filter((c) => c.categoria_pai_id === null));
+      } catch {
+        setErroCategorias("Erro de conexão com o servidor.");
+      } finally {
+        setCarregandoCategorias(false);
+      }
+    }
+
+    carregarCategorias();
+  }, []);
+
+  /* para PRODUTOS */
+  const [produtos, setProdutos] = useState<Produtos[]>([]);
+  const [carregandoProdutos, setCarregandoProdutos] = useState(true);
+  const [erroProdutos, setErroProdutos] = useState("");
+  useEffect(() => {
+    async function carregarProdutos() {
+      try {
+        const resposta = await fetch("/api/produtos");
+
+        if (resposta.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
+        if (!resposta.ok) {
+          setErroProdutos("Não foi possível carregar os produtos.");
+          return;
+        }
+
+        const dados: Produtos[] = await resposta.json();
+        setProdutos(dados);
+      } catch {
+        setErroProdutos("Erro de conexão com o servidor.");
+      } finally {
+        setCarregandoProdutos(false);
+      }
+    }
+
+    carregarProdutos();
   }, []);
 
   return (
@@ -69,14 +148,35 @@ export default function Home() {
             placeholder="Procurar por..."
           ></input>
           <p className="text-black font-semibold text-3xl pt-10">Categorias</p>
-          <nav className=" overflow-hidden flex flex-block flex-row gap-15 pb-5 pt-10">
-            <Image
-              src="/img_feed/mercado.png"
-              alt="mercado"
-              width={100}
-              height={100}
-              className="w-30 h-30 shrink-0 object-cover"
-            />
+          <nav className="overflow-hidden flex flex-row gap-15 pb-5 pt-10">
+            {carregandoCategorias ? (
+              <p className="text-black text-xl">Carregando categorias...</p>
+            ) : erroCategorias ? (
+              <p className="text-red-600 text-xl">{erroCategorias}</p>
+            ) : categorias.length === 0 ? (
+              <p className="text-black text-xl">
+                Nenhuma categoria cadastrada.
+              </p>
+            ) : (
+              categorias.map((categoria) => (
+                <Link
+                  key={categoria.id}
+                  href={`/categoria/${gerarSlug(categoria.nome)}`}
+                  className="flex flex-col items-center shrink-0"
+                >
+                  <Image
+                    src="/img_feed/adicione_imagem.png"
+                    alt={categoria.nome}
+                    width={100}
+                    height={100}
+                    className="w-30 h-30 shrink-0 object-cover"
+                  />
+                  <p className="text-black text-xl pt-3 capitalize">
+                    {categoria.nome}
+                  </p>
+                </Link>
+              ))
+            )}
           </nav>
 
           {/* INFO. DE PRODUTOS */}
@@ -92,27 +192,52 @@ export default function Home() {
               </summary>
             </details>
             <nav className="flex flex-nowrap gap-10 overflow-hidden pb-5 pt-10 peer-open:flex-wrap">
-              <span className="bg-[#FFFFFF] p-5 pb-11 shrink-0 rounded-2xl w-65 flex flex-col items-center">
-                <Image
-                  src="/img_feed/prd_relogio.png"
-                  alt="relógio"
-                  width={100}
-                  height={100}
-                  className="w-30 h-30 shrink-0 object-cover"
-                />
-                <div className="pt-5 mr-auto">
-                  <p className="line-clamp-2 break-words text-black font-bold text-2xl">
-                    titulo
-                  </p>
-                  <p className="text-black font-bold text-2xl">R$ preço</p>
-                  <p
-                    className={`font-bold text-2xl ${disponivel ? "text-green-600" : "text-red-600"}`}
-                  >
-                    {disponivel ? "Disponível" : "Indisponível"}
-                    {/* está sendo pego da variavel global */}
-                  </p>{" "}
-                </div>
-              </span>
+              {carregandoProdutos ? (
+                <p className="text-black text-xl">Carregando produtos...</p>
+              ) : erroProdutos ? (
+                <p className="text-red-600 text-xl">{erroProdutos}</p>
+              ) : produtos.length === 0 ? (
+                <p className="text-black text-xl">Nenhum produto cadastrado.</p>
+              ) : (
+                produtos.map((produto) => {
+                  const disponivel = produto.estoque > 0;
+
+                  return (
+                    <span
+                      key={produto.id}
+                      className="bg-[#FFFFFF] p-5 pb-11 shrink-0 rounded-2xl w-65 flex flex-col items-center"
+                    >
+                      <Image
+                        src={
+                          produto.imagem && produto.imagem.length > 0
+                            ? `http://localhost:3001${produto.imagem[0].url_imagem}`
+                            : "/img_feed/adicione_imagem.png"
+                        }
+                        alt={produto.nome}
+                        width={100}
+                        height={100}
+                        className="w-30 h-30 shrink-0 object-cover"
+                      />
+                      <div className="pt-5 mr-auto">
+                        <p className="line-clamp-2 break-words text-black font-bold text-2xl">
+                          {produto.nome}
+                        </p>
+                        <p className="text-black font-bold text-2xl">
+                          {Number(produto.preco).toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          })}
+                        </p>
+                        <p
+                          className={`font-bold text-2xl ${disponivel ? "text-green-600" : "text-red-600"}`}
+                        >
+                          {disponivel ? "Disponível" : "Indisponível"}
+                        </p>
+                      </div>
+                    </span>
+                  );
+                })
+              )}
             </nav>
           </div>
 
@@ -166,9 +291,9 @@ export default function Home() {
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={loja.logo_url || "/img_feed/loja_generica.jpg"}
+                      src={loja.logo_url || "/img_feed/lojas/loja_generica.jpg"}
                       alt={`loja ${loja.nome}`}
-                      className="w-30 h-30 shrink-0 rounded-full object-cover"
+                      className="w-30 h-30 shrink-0 rounded-full object-cover "
                     />
                     <div className="flex flex-col items-center pt-5">
                       <p className="text-black text-2xl text-center line-clamp-2 break-words">
