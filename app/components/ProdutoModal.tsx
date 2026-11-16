@@ -1,18 +1,31 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { getCategorias, type Categoria, type ProdutoFormData } from "@/app/service/produtoService";
+import {
+  getCategorias,
+  type Categoria,
+  type FotoParaSalvar,
+  type ProdutoFormData,
+} from "@/app/service/produtoService";
 
-// Foto escolhida no computador + endereço temporário para mostrar a prévia
-type Foto = { arquivo: File; previa: string };
+// Uma foto num dos espaços do modal:
+// - arquivo: foto nova escolhida no computador (null = foto que já estava salva e não mudou)
+// - previa: endereço usado no <img> (URL do backend ou endereço temporário "blob:")
+// - imagemId: id da foto no backend, quando ela já existia (usado para trocar a foto)
+type Foto = { arquivo: File | null; previa: string; imagemId?: number };
 
-// 4 espaços de foto: [0] é o grande, [1..3] são os pequenos
-export type FotosProduto = (File | null)[];
+// O que o modal entrega ao salvar: 4 espaços, [0] é o grande e [1..3] são os pequenos
+export type FotosProduto = FotoParaSalvar[];
+
+// Mesmas regras do backend (FileInterceptor em produtos.controller.ts)
+const TIPOS_PERMITIDOS = ["image/jpeg", "image/png", "image/webp"];
+const TAMANHO_MAXIMO = 5 * 1024 * 1024; // 5 MB
 
 interface ProdutoModalProps {
   titulo: string; // "Adicionar Produto" ou "Editar Produto"
   textoBotao: string; // "Adicionar" ou "Salvar"
   valoresIniciais?: Partial<ProdutoFormData>; // preenchido só no modo editar
+  fotosIniciais?: { id: number; url: string }[]; // fotos já salvas, na ordem (só no modo editar)
   onSalvar: (dados: ProdutoFormData, fotos: FotosProduto) => Promise<void>;
   onDeletar?: () => Promise<void>; // se for passado, aparece o botão DELETAR
   onFechar: () => void;
@@ -31,6 +44,7 @@ export default function ProdutoModal({
   titulo,
   textoBotao,
   valoresIniciais,
+  fotosIniciais,
   onSalvar,
   onDeletar,
   onFechar,
@@ -45,7 +59,13 @@ export default function ProdutoModal({
     valoresIniciais?.preco !== undefined ? String(Math.round(valoresIniciais.preco * 100)) : ""
   );
   const [estoque, setEstoque] = useState(valoresIniciais?.estoque ?? 0);
-  const [fotos, setFotos] = useState<(Foto | null)[]>([null, null, null, null]);
+  // Começa com as fotos já salvas (modo editar) nos primeiros espaços
+  const [fotos, setFotos] = useState<(Foto | null)[]>(() =>
+    [0, 1, 2, 3].map((i) => {
+      const salva = fotosIniciais?.[i];
+      return salva ? { arquivo: null, previa: salva.url, imagemId: salva.id } : null;
+    })
+  );
 
   const [subcategorias, setSubcategorias] = useState<Categoria[]>([]);
   const [salvando, setSalvando] = useState(false);
@@ -83,9 +103,22 @@ export default function ProdutoModal({
 
   function escolherFoto(indice: number, arquivo: File | undefined) {
     if (!arquivo) return;
+
+    // Avisa aqui mesmo, antes de enviar, se o arquivo não for aceito pelo backend
+    if (!TIPOS_PERMITIDOS.includes(arquivo.type)) {
+      return setErro("Formato de imagem não permitido. Use JPG, PNG ou WebP.");
+    }
+    if (arquivo.size > TAMANHO_MAXIMO) {
+      return setErro("A imagem deve ter no máximo 5 MB.");
+    }
+    setErro("");
+
     const previa = URL.createObjectURL(arquivo);
     previasRef.current.push(previa);
-    setFotos((atuais) => atuais.map((f, i) => (i === indice ? { arquivo, previa } : f)));
+    // Se o espaço já tinha uma foto salva, guarda o imagemId para trocar essa foto no backend
+    setFotos((atuais) =>
+      atuais.map((f, i) => (i === indice ? { arquivo, previa, imagemId: f?.imagemId } : f))
+    );
   }
 
   async function enviar(e: FormEvent) {
@@ -106,7 +139,7 @@ export default function ProdutoModal({
           preco: Number(precoCentavos) / 100,
           estoque,
         },
-        fotos.map((f) => f?.arquivo ?? null)
+        fotos.map((f) => (f ? { arquivo: f.arquivo, imagemId: f.imagemId } : null))
       );
     } catch (err) {
       setErro(err instanceof Error ? err.message : "Não foi possível salvar o produto.");
@@ -289,15 +322,18 @@ function EspacoFoto({
     >
       <input
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         className="sr-only"
         aria-label={grande ? "Foto principal do produto" : "Foto adicional do produto"}
-        onChange={(e) => onEscolher(e.target.files?.[0])}
+        onChange={(e) => {
+          onEscolher(e.target.files?.[0]);
+          e.target.value = ""; // permite escolher o mesmo arquivo de novo
+        }}
       />
       {foto ? (
-        // A prévia é um endereço "blob:" do navegador, que o <Image /> do Next não aceita
+        // A prévia pode ser um endereço "blob:" do navegador, que o <Image /> do Next não aceita
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={foto.previa} alt="Prévia da foto do produto" className="h-full w-full object-cover" />
+        <img src={foto.previa} alt="Prévia da foto do produto" className="h-full w-full object-contain p-1" />
       ) : (
         <>
           <IconeCameraMais />

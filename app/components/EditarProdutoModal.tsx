@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ProdutoModal from "./ProdutoModal";
 import {
   atualizarProduto,
   deletarProduto,
   getProdutoPorId,
+  salvarFotosProduto,
   type ProdutoDetalhe,
 } from "@/app/service/produtoService";
 
@@ -19,6 +20,15 @@ interface EditarProdutoModalProps {
 export default function EditarProdutoModal({ produtoId, onFechar, onAlterado }: EditarProdutoModalProps) {
   const [produto, setProduto] = useState<ProdutoDetalhe | null>(null);
   const [erro, setErro] = useState("");
+  // Se uma foto falhar e o usuário tentar de novo, as fotos que já foram não são enviadas outra vez
+  const fotosEnviadas = useRef(new Set<number>());
+  // Se os dados foram salvos e o usuário fechar depois de um erro nas fotos, a página ainda precisa atualizar
+  const salvouAlgo = useRef(false);
+
+  const fechar = () => {
+    if (salvouAlgo.current) onAlterado();
+    onFechar();
+  };
 
   // Busca os dados atuais do produto para preencher o formulário
   useEffect(() => {
@@ -61,19 +71,29 @@ export default function EditarProdutoModal({ produtoId, onFechar, onAlterado }: 
         preco: produto.preco,
         estoque: produto.estoque,
       }}
-      onSalvar={async (dados) => {
+      fotosIniciais={produto.imagens}
+      onSalvar={async (dados, fotos) => {
         // Se der erro, o ProdutoModal mostra a mensagem e o modal continua aberto
         await atualizarProduto(produtoId, dados);
-        // TODO (passo 8): enviar as fotos quando o CRUD de imagens estiver pronto
-        onAlterado();
-        onFechar();
+        salvouAlgo.current = true;
+
+        // Fotos: espaços com foto salva e arquivo novo são trocados; espaços vazios com arquivo novo são adicionados
+        try {
+          await salvarFotosProduto(produtoId, fotos, fotosEnviadas.current);
+        } catch (erro) {
+          const motivo = erro instanceof Error ? erro.message : "";
+          throw new Error(`Os dados foram salvos, mas uma foto não foi enviada. ${motivo} Tente salvar de novo.`);
+        }
+
+        fechar();
       }}
       onDeletar={async () => {
+        // O banco apaga os registros das fotos junto com o produto (onDelete: Cascade no schema)
         await deletarProduto(produtoId);
-        onAlterado();
-        onFechar();
+        salvouAlgo.current = true;
+        fechar();
       }}
-      onFechar={onFechar}
+      onFechar={fechar}
     />
   );
 }

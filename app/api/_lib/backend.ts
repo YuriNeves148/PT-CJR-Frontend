@@ -19,15 +19,20 @@ export async function repassarParaBackend(
   }
 
   try {
-    const corpo = metodo === "DELETE" ? undefined : await request.text();
+    // O corpo é repassado em bytes, do jeito que chegou. Assim funciona tanto para
+    // JSON (dados do produto) quanto para multipart/form-data (upload de fotos).
+    const corpo = metodo === "DELETE" ? undefined : await request.arrayBuffer();
+    // O Content-Type original precisa ir junto: no upload ele carrega o "boundary"
+    // que o backend usa para separar o arquivo dos outros campos
+    const tipoConteudo = request.headers.get("content-type");
 
     const resposta = await fetch(`${BACKEND_URL}${caminho}`, {
       method: metodo,
       headers: {
         Authorization: `Bearer ${token}`,
-        ...(corpo ? { "Content-Type": "application/json" } : {}),
+        ...(corpo?.byteLength && tipoConteudo ? { "Content-Type": tipoConteudo } : {}),
       },
-      body: corpo || undefined,
+      body: corpo?.byteLength ? corpo : undefined,
       cache: "no-store",
     });
 
