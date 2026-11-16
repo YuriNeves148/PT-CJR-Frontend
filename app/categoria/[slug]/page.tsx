@@ -22,6 +22,9 @@ const HEROIS: Record<string, { titulo: string; imagem: string; alt: string }> = 
   farmacia: { titulo: "O universo da farmácia", imagem: "/stockles2-hero.png", alt: "stockles, mascote da Stock.io" },
   moda: { titulo: "O universo da moda", imagem: "/stocklee2.png", alt: "stocklee, mascote da Stock.io" },
   casa: { titulo: "O universo da casa", imagem: "/stockles2-hero.png", alt: "stockles, mascote da Stock.io" },
+  eletronicos: { titulo: "O universo dos eletrônicos", imagem: "/stockles.png", alt: "stockles segurando um celular" },
+  jogos: { titulo: "O universo dos jogos", imagem: "/stockles.png", alt: "stockles segurando um celular" },
+  brinquedos: { titulo: "O universo dos brinquedos", imagem: "/stocklee2.png", alt: "stocklee, mascote da Stock.io" },
 };
 
 export default function CategoriaPage() {
