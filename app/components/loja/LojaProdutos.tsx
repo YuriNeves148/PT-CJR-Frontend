@@ -79,9 +79,6 @@ export default function LojaProdutos({
                             </span>
                         </h2>
 
-                        <span className="text-xs font-medium text-[#7137FF]">
-                            ver mais
-                        </span>
                     </div>
 
                     {melhoresAvaliados.length > 0 ? (
@@ -120,9 +117,6 @@ export default function LojaProdutos({
                             </span>
                         </h2>
 
-                        <span className="text-xs font-medium text-[#7137FF]">
-                            ver mais
-                        </span>
                     </div>
 
                     {produtosVisiveis.length > 0 ? (

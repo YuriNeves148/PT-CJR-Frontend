@@ -1,10 +1,11 @@
+import { BACKEND_URL } from "@/app/lib/backend";
 
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
     const resposta = await fetch(
-      "http://localhost:3001/categorias",
+      `${BACKEND_URL}/categorias`,
       { cache: "no-store" }
     );
 

@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
+import { ACEITAR_IMAGEM } from "./enviarImagemLoja";
 
 export type CategoriaModal = {
   id: number;
@@ -32,7 +33,8 @@ type CampoArquivoProps = {
   icone: ReactNode;
 };
 
-const LIMITE_MB = 10;
+const LIMITE_IMAGEM_MB = 10;
+const LIMITE_LOGO_MB = 2;
 
 function CampoArquivo({
   titulo,
@@ -157,7 +159,8 @@ export default function ModalAdicionarLoja({
   function validarArquivo(
     arquivo: File | null,
     formatos: string[],
-    descricao: string
+    descricao: string,
+    limiteMb = LIMITE_IMAGEM_MB
   ) {
     if (!arquivo) return true;
 
@@ -168,8 +171,8 @@ export default function ModalAdicionarLoja({
       return false;
     }
 
-    if (arquivo.size > LIMITE_MB * 1024 * 1024) {
-      setErro(`${descricao} deve ter no máximo ${LIMITE_MB} MB.`);
+    if (arquivo.size > limiteMb * 1024 * 1024) {
+      setErro(`${descricao} deve ter no máximo ${limiteMb} MB.`);
       return false;
     }
 
@@ -188,7 +191,7 @@ export default function ModalAdicionarLoja({
     }
 
     if (!validarArquivo(fotoPerfil, ["jpg", "jpeg", "png", "webp"], "Foto de perfil")) return;
-    if (!validarArquivo(logo, ["svg"], "Logo")) return;
+    if (!validarArquivo(logo, ["svg", "png", "jpg", "jpeg", "webp"], "Logo", LIMITE_LOGO_MB)) return;
     if (!validarArquivo(banner, ["jpg", "jpeg", "png", "webp"], "Banner")) return;
 
     setEnviando(true);
@@ -299,10 +302,15 @@ export default function ModalAdicionarLoja({
             />
 
             <CampoArquivo
-              titulo="Anexe a logo em SVG de sua loja"
+              titulo="Anexe a logo de sua loja em SVG, PNG, JPG, JPEG ou WebP (até 2 MB)"
               arquivo={logo}
-              aceitar=".svg"
-              aoSelecionar={setLogo}
+              aceitar={ACEITAR_IMAGEM.logo}
+              aoSelecionar={(arquivo) => {
+                setLogo(arquivo);
+                setErro(arquivo && arquivo.size > LIMITE_LOGO_MB * 1024 * 1024
+                  ? "Logo deve ter no máximo 2 MB. Escolha outro arquivo antes de cadastrar a loja."
+                  : "");
+              }}
               icone={<IconeUpload />}
             />
 

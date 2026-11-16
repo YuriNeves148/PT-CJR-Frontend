@@ -1,10 +1,12 @@
 
 import Link from "next/link";
+import Image from "next/image";
 
 type LojaHeroProps = {
   nome: string;
   categoria: string;
   bannerUrl?: string | null;
+  logoUrl?: string | null;
   proprietario: string;
   perfilHref?: string;
 };
@@ -13,6 +15,7 @@ export default function LojaHero({
   nome,
   categoria,
   bannerUrl,
+  logoUrl,
   proprietario,
   perfilHref,
 }: LojaHeroProps) {
@@ -46,6 +49,16 @@ export default function LojaHero({
 
       {/* Nome e categoria da loja */}
       <div className="relative z-10 mx-auto w-fit max-w-full px-6">
+        {logoUrl && (
+          <Image
+            src={logoUrl}
+            alt={`Logo de ${nome}`}
+            width={128}
+            height={128}
+            unoptimized
+            className="mb-4 h-20 w-20 object-contain sm:h-24 sm:w-24 lg:h-28 lg:w-28"
+          />
+        )}
         <h1
           className="
             text-4xl font-semibold

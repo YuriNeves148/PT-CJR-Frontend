@@ -1,3 +1,4 @@
+import { BACKEND_URL } from "@/app/lib/backend";
 
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
     }
 
     const resposta = await fetch(
-      "http://localhost:3001/lojas",
+      `${BACKEND_URL}/lojas`,
       {
         method: "POST",
         headers: {
