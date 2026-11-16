@@ -135,7 +135,9 @@ export default function ProdutoModal({
         {
           nome: nome.trim(),
           categoria_id: Number(categoriaId),
-          descricao: descricao.trim() || undefined,
+          // Vazio vira null: assim, no editar, apagar o texto apaga a descrição no banco
+          // (com undefined o campo nem era enviado e a descrição antiga voltava)
+          descricao: descricao.trim() || null,
           preco: Number(precoCentavos) / 100,
           estoque,
         },

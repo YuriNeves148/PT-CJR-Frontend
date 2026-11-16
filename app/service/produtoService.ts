@@ -70,7 +70,7 @@ export async function getProdutos(): Promise<Produto[]> {
 export interface ProdutoFormData {
   categoria_id: number;
   nome: string;
-  descricao?: string;
+  descricao?: string | null; // null apaga a descrição que existia
   preco: number; // em reais, ex: 4.7
   estoque: number;
 }
@@ -118,6 +118,10 @@ async function chamarRotaInterna<T>(url: string, method: string, body?: unknown)
   const dados = await resposta.json().catch(() => null);
 
   if (!resposta.ok) {
+    // 401: sem login ou login vencido (o backend responde só "Unauthorized", em inglês)
+    if (resposta.status === 401) {
+      throw new Error('Sua sessão expirou ou você não está logado. Faça login novamente.');
+    }
     // O Nest manda o erro em "message" (texto ou lista); as rotas do Next mandam em "mensagem"
     const msg = dados?.message ?? dados?.mensagem ?? 'Não foi possível salvar o produto.';
     throw new Error(Array.isArray(msg) ? msg.join(' ') : msg);
@@ -126,7 +130,9 @@ async function chamarRotaInterna<T>(url: string, method: string, body?: unknown)
 }
 
 export function criarProduto(lojaId: number, data: ProdutoFormData) {
-  return chamarRotaInterna<ProdutoApi>('/api/produtos', 'POST', { loja_id: lojaId, ...data });
+  // /api/produtos/criar (e não /api/produtos) para não colidir com a rota GET /api/produtos
+  // que a branch feed_integrado cria para listar os produtos do usuário
+  return chamarRotaInterna<ProdutoApi>('/api/produtos/criar', 'POST', { loja_id: lojaId, ...data });
 }
 
 export function atualizarProduto(id: number, data: Partial<ProdutoFormData>) {
