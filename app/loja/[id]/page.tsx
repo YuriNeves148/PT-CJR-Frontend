@@ -28,7 +28,7 @@ export default async function LojaPage({
         categoria={lojaExemplo.categoria}
         bannerUrl={lojaExemplo.bannerUrl}
         proprietario={lojaExemplo.proprietario}
-        perfilHref="/perfil_logado"
+        perfilHref="/perfil/1"
       />
 
       <LojaAvaliacoes
