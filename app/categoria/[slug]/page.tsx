@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type SyntheticEvent } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -27,9 +27,27 @@ const HEROIS: Record<string, { titulo: string; imagem: string; alt: string }> = 
   brinquedos: { titulo: "O universo dos brinquedos", imagem: "/stocklee2.png", alt: "stocklee, mascote da Stock.io" },
 };
 
+// O link pode chegar com acento, espaço ou maiúscula (ex.: /categoria/Farmácia, gerado pelo feed).
+// Passa tudo pelo mesmo slugify dos nossos links: "Farmácia" -> "farmacia", "Cama e Banho" -> "cama-e-banho"
+function normalizarSlug(bruto: string) {
+  let texto = bruto;
+  try {
+    texto = decodeURIComponent(bruto);
+  } catch {
+    // "%" solto na URL: usa como veio
+  }
+  return slugify(texto);
+}
+
+// Se a foto do produto não abrir, mostra o logo no lugar do ícone de imagem quebrada
+function usarImagemReserva(e: SyntheticEvent<HTMLImageElement>) {
+  const img = e.currentTarget;
+  if (!img.src.endsWith("/logo-stockio.png")) img.src = "/logo-stockio.png";
+}
+
 export default function CategoriaPage() {
-  const { slug } = useParams<{ slug: string }>();
-  const hero = HEROIS[slug] ?? HEROIS.tecnologia;
+  const params = useParams<{ slug: string }>();
+  const slug = normalizarSlug(params.slug);
 
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -50,16 +68,30 @@ export default function CategoriaPage() {
 
   // Só as categorias principais viram botões; as subcategorias entram junto com a mãe
   const categoriasPrincipais = categorias.filter((c) => c.categoria_pai_id === null);
-  const categoriaAtual = categoriasPrincipais.find((c) => slugify(c.nome) === slug);
-
-  const idsDaCategoria = new Set(
-    categoriaAtual
-      ? [
-          categoriaAtual.id,
-          ...categorias.filter((c) => c.categoria_pai_id === categoriaAtual.id).map((c) => c.id),
-        ]
-      : []
+  // Se duas categorias tiverem o mesmo nome, viram um botão só (as duas teriam o mesmo link)
+  const botoesCategorias = categoriasPrincipais.filter(
+    (c, i, todas) => todas.findIndex((outra) => slugify(outra.nome) === slugify(c.nome)) === i
   );
+  // Todas as categorias principais com esse nome (normalmente só uma)
+  const categoriasDoSlug = categoriasPrincipais.filter((c) => slugify(c.nome) === slug);
+  const categoriaAtual = categoriasDoSlug[0];
+  const naoEncontrada = !carregando && !erro && !categoriaAtual;
+
+  // Categorias da lista HEROIS têm frase e mascote próprios; as outras usam o nome vindo do banco
+  const hero = HEROIS[slug] ?? {
+    // Categoria que não existe: título neutro em vez de repetir o que veio na URL
+    titulo: naoEncontrada
+      ? "Todos os universos"
+      : `O universo de ${categoriaAtual?.nome ?? slug.replace(/-/g, " ")}`,
+    imagem: "/stockles2-hero.png",
+    alt: "stockles, mascote da Stock.io",
+  };
+
+  const idsMae = new Set(categoriasDoSlug.map((c) => c.id));
+  const idsDaCategoria = new Set([
+    ...idsMae,
+    ...categorias.filter((c) => c.categoria_pai_id !== null && idsMae.has(c.categoria_pai_id)).map((c) => c.id),
+  ]);
   const filtrados = produtos.filter(
     (p) =>
       idsDaCategoria.has(p.categoriaId) &&
@@ -122,12 +154,12 @@ export default function CategoriaPage() {
 
         <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap gap-3">
-            {categoriasPrincipais.map((c) => (
+            {botoesCategorias.map((c) => (
               <Link
                 key={c.id}
                 href={`/categoria/${slugify(c.nome)}`}
                 className={`w-[78px] rounded-full py-[5px] text-center text-[11px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6c3df0] ${
-                  c.id === categoriaAtual?.id
+                  slugify(c.nome) === slug
                     ? "bg-[#6c3df0] text-white"
                     : "bg-white text-[#8b78d6]"
                 }`}
@@ -174,6 +206,7 @@ export default function CategoriaPage() {
                 <img
                   src={p.imagem}
                   alt={p.nome}
+                  onError={usarImagemReserva}
                   className="max-h-full max-w-full object-contain"
                 />
               </div>
@@ -200,7 +233,12 @@ export default function CategoriaPage() {
             Não foi possível carregar os produtos. Tente novamente mais tarde.
           </p>
         )}
-        {!carregando && !erro && produtosExibidos.length === 0 && (
+        {naoEncontrada && (
+          <p className="mt-8 text-center text-[#8b78d6]">
+            Categoria não encontrada. Escolha uma das categorias acima.
+          </p>
+        )}
+        {!carregando && !erro && !naoEncontrada && produtosExibidos.length === 0 && (
           <p className="mt-8 text-center text-[#8b78d6]">Nenhum produto encontrado.</p>
         )}
       </main>
