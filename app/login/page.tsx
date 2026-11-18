@@ -74,7 +74,7 @@ export default function LoginPage() {
   }
 
   return (
-    
+
     <main className="h-dvh overflow-hidden bg-[#f7f4e8] grid grid-cols-2 pl-8 pr-15">
 
       <section className="flex flex-col items-center gap-5 ">

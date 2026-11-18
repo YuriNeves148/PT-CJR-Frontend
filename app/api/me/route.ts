@@ -1,3 +1,4 @@
+import { BACKEND_URL } from "@/app/lib/backend";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const resposta = await fetch("http://localhost:3001/user/me", {
+    const resposta = await fetch(`${BACKEND_URL}/user/me`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -22,8 +23,8 @@ export async function GET(request: NextRequest) {
 
     if (!resposta.ok) {
       return NextResponse.json(
-        { mensagem: "Sessão inválida ou expirada." },
-        { status: 401 }
+        { mensagem: resposta.status === 401 ? "Sessão inválida ou expirada." : "Não foi possível consultar a sessão." },
+        { status: resposta.status === 401 ? 401 : 502 }
       );
     }
 

@@ -2,18 +2,57 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const rotasLogadas = ["/feed_logado", "/perfil_logado"];
-  const isLoggedIn = rotasLogadas.some((rota) => pathname.startsWith(rota));
+  // Sessão real: consulta /api/me (cookie HTTP-only) a cada navegação
+  const [usuarioId, setUsuarioId] = useState<number | null>(null);
+  const [saindo, setSaindo] = useState(false);
+  const [erroLogout, setErroLogout] = useState("");
+  const isLoggedIn = usuarioId !== null;
 
-  // Logout provisório: apenas leva para o feed deslogado
-  function fazerLogout() {
-    router.push("/feed_deslogado");
+  useEffect(() => {
+    const controlador = new AbortController();
+
+    fetch("/api/me", { cache: "no-store", signal: controlador.signal })
+      .then((resposta) => {
+        if (resposta.status === 401) return null;
+        if (!resposta.ok) throw new Error("Falha ao consultar sessão.");
+        return resposta.json();
+      })
+      .then((usuario: { id?: unknown } | null) => {
+        if (!controlador.signal.aborted) {
+          setUsuarioId(typeof usuario?.id === "number" ? usuario.id : null);
+        }
+      })
+      .catch(() => undefined);
+
+    return () => controlador.abort();
+  }, [pathname]);
+
+  // Encerra a sessão (remove o cookie) e leva para o feed deslogado
+  async function fazerLogout() {
+    if (saindo) return;
+    setSaindo(true);
+    setErroLogout("");
+    try {
+      const resposta = await fetch("/api/logout", { method: "POST" });
+      if (!resposta.ok) throw new Error("Falha ao encerrar sessão.");
+      // Confirma que o navegador já não envia uma sessão válida.
+      const sessao = await fetch("/api/me", { cache: "no-store" });
+      if (sessao.status !== 401) throw new Error("Não foi possível confirmar o logout.");
+      setUsuarioId(null);
+      router.push("/feed_deslogado");
+      router.refresh();
+    } catch {
+      setErroLogout("Não foi possível confirmar a saída. Tente novamente.");
+    } finally {
+      setSaindo(false);
+    }
   }
 
   if (pathname === "/login" || pathname === "/cadastro") {
@@ -33,7 +72,7 @@ export default function Navbar() {
   });
 
   return (
-    <header className="flex w-full items-center justify-between bg-black px-6 py-4 text-white md:px-10">
+    <header className="relative flex w-full items-center justify-between bg-black px-6 py-4 text-white md:px-10">
       {/* Logo Stock.io */}
       <Link href="/" aria-label="Página inicial Stock.io">
         <Image
@@ -82,7 +121,7 @@ export default function Navbar() {
           <>
             {/* Perfil */}
             <Link
-              href="/perfil_logado"
+              href={`/perfil/${usuarioId}`}
               aria-label="Meu perfil"
               className="group block"
             >
@@ -97,6 +136,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={fazerLogout}
+              disabled={saindo}
               aria-label="Sair da conta"
               className="block h-6 w-6 cursor-pointer bg-white transition-colors duration-300 hover:bg-[#AF052A] focus-visible:bg-[#AF052A]"
               style={estiloMascara("arrow-exit.svg")}
@@ -122,6 +162,11 @@ export default function Navbar() {
           </>
         )}
       </nav>
+      {erroLogout && (
+        <p role="alert" className="absolute right-6 top-full z-50 max-w-xs rounded-lg bg-black p-3 text-sm text-white shadow-lg">
+          {erroLogout}
+        </p>
+      )}
     </header>
   );
 }

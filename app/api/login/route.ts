@@ -1,10 +1,11 @@
+import { BACKEND_URL } from "@/app/lib/backend";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
     const { email, senha } = await request.json();
 
-    const resposta = await fetch("http://localhost:3001/login", {
+    const resposta = await fetch(`${BACKEND_URL}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, senha }),

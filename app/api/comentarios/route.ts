@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { BACKEND_URL } from "@/app/lib/backend";
 
 export async function POST(request: NextRequest) {
   const token = request.cookies.get("session")?.value;
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
   try {
     const corpo = await request.json();
 
-    const resposta = await fetch("http://localhost:3001/comentarios", {
+    const resposta = await fetch(`${BACKEND_URL}/comentarios`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
