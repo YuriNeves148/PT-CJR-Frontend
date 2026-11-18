@@ -74,22 +74,12 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f4e8] grid grid-cols-2 pl-8 pr-15">
+
+    <main className="h-dvh overflow-hidden bg-[#f7f4e8] grid grid-cols-2 pl-8 pr-15">
+
       <section className="flex flex-col items-center gap-5 ">
-        <Image
-          src="/images/LOGO Stock.io.png"
-          alt="Logotipo da STOCK"
-          width={300}
-          height={100}
-        />
-        <Image
-          src="/images/Stockles - Mascote da Stock.io.png"
-          alt="Logotipo da STOCK"
-          width={300}
-          height={100}
-          unoptimized
-          className="w-[450px] max-w-full h-auto"
-        />
+        <Image src="/images/LOGO Stock.io.png" alt="Logotipo da STOCK" width={300} height={100} className="-translate-x-10"/>
+        <Image src="/images/Stockles - Mascote da Stock.io.png" alt="Mascote Stockles" width={300} height={100} unoptimized className="w-[450px] max-w-full h-auto max-h-[calc(100dvh-150px)] object-contain"/>
       </section>
 
       <section

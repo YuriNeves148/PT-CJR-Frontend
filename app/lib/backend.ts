@@ -167,9 +167,22 @@ export function buscarPerfil(id: string): Promise<Consulta<PerfilPublico>> {
 // Evita usar URLs arbitrárias em CSS (background-image) ou <img>.
 export function urlImagemSegura(url: string | null | undefined) {
   if (!url) return null;
-  if (!url.startsWith(`${BACKEND_PUBLIC_URL}/uploads/`)) return null;
-  if (/["'()\\\s<>]/.test(url)) return null;
-  return url;
+  if (/["'()\\\s<>?#%]/.test(url)) return null;
+  const base = [BACKEND_PUBLIC_URL, BACKEND_URL].find((origem) =>
+    url.startsWith(`${origem}/uploads/`)
+  );
+  const caminho = url.startsWith("/uploads/") ? url : base ? url.slice(base.length) : null;
+  if (!caminho) return null;
+  // Recusa travessia antes que a normalização de URL esconda os segmentos.
+  if (caminho.split("/").some((parte) => parte === "." || parte === "..")) return null;
+  const absoluta = `${BACKEND_PUBLIC_URL}${caminho}`;
+  try {
+    const imagem = new URL(absoluta);
+    if (!["http:", "https:"].includes(imagem.protocol)) return null;
+    return imagem.href;
+  } catch {
+    return null;
+  }
 }
 
 export function mapearProduto(produto: ProdutoApi): ProdutoLoja {
@@ -182,7 +195,7 @@ export function mapearProduto(produto: ProdutoApi): ProdutoLoja {
     nome: produto.nome,
     preco: Number(produto.preco),
     estoque: produto.estoque,
-    imagemUrl: primeiraImagem?.url_imagem ?? null,
+    imagemUrl: urlImagemSegura(primeiraImagem?.url_imagem),
   };
 }
 
