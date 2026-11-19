@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     if (!resposta.ok) {
       return NextResponse.json(
         { mensagem: "Não foi possível realizar o login." },
-        { status: resposta.status }
+        { status: resposta.status },
       );
     }
 
@@ -22,12 +22,12 @@ export async function POST(request: Request) {
     if (!dados.access_token) {
       return NextResponse.json(
         { mensagem: "Resposta inválida do backend." },
-        { status: 502 }
+        { status: 502 },
       );
     }
 
     const resultado = NextResponse.json({ sucesso: true });
-
+    // o cookie é tratado como httOnly para impedir chamadas diretas do navegador
     resultado.cookies.set("session", dados.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json(
       { mensagem: "Servidor indisponível." },
-      { status: 502 }
+      { status: 502 },
     );
   }
 }

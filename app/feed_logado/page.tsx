@@ -8,6 +8,7 @@ type Loja = {
   nome: string;
   descricao?: string | null;
   logo_url?: string | null;
+  categoria_pai: number | null;
 };
 
 type Categoria = {
@@ -159,22 +160,27 @@ export default function Home() {
               </p>
             ) : (
               categorias.map((categoria) => (
-                <Link
+                <span
                   key={categoria.id}
-                  href={`/categoria/${gerarSlug(categoria.nome)}`}
-                  className="flex flex-col items-center shrink-0"
+                  className="bg-white pb-5 p-3 rounded-4xl"
                 >
-                  <Image
-                    src="/img_feed/adicione_imagem.png"
-                    alt={categoria.nome}
-                    width={100}
-                    height={100}
-                    className="w-30 h-30 shrink-0 object-cover"
-                  />
-                  <p className="text-black text-xl pt-3 capitalize">
-                    {categoria.nome}
-                  </p>
-                </Link>
+                  <Link
+                    key={categoria.id}
+                    href={`/categoria/${gerarSlug(categoria.nome)}`}
+                    className="flex flex-col items-center shrink-0"
+                  >
+                    <Image
+                      src="/img_feed/sem-imagem.png"
+                      alt={categoria.nome}
+                      width={100}
+                      height={100}
+                      className="w-30 h-30 shrink-0 object-cover rounded-2xl"
+                    />
+                    <p className="text-black text-xl capitalize">
+                      {categoria.nome}
+                    </p>
+                  </Link>
+                </span>
               ))
             )}
           </nav>
@@ -263,11 +269,29 @@ export default function Home() {
                     </svg>
                   </summary>
 
+                  {/* FILTROS */}
                   <div className="absolute top-full z-20 w-120 rounded-lg border border-gray-300 bg-white p-4 text-xl text-black shadow-lg">
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" name="categoria" value="mercado" />
-                      Mercado
-                    </label>
+                    <div>
+                      {carregandoCategorias ? (
+                        <p className="text-black text-xl">
+                          Carregando categorias
+                        </p>
+                      ) : (
+                        categorias.map((categoria) => (
+                          <label
+                            key={categoria.id}
+                            className="flex items-center gap-2 text-transform: capitalize"
+                          >
+                            <input
+                              type="checkbox"
+                              name="categoria"
+                              value={categoria.nome}
+                            />
+                            {categoria.nome}
+                          </label>
+                        ))
+                      )}
+                    </div>
                   </div>
                 </details>
                 <span className="ml-10 pr-10 text-blue-600 text-lg hover:text-blue-900">
@@ -291,12 +315,12 @@ export default function Home() {
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={loja.logo_url || "/img_feed/lojas/loja_generica.jpg"}
+                      src={loja.logo_url || "/img_feed/loja-sem-imagem.png"}
                       alt={`loja ${loja.nome}`}
                       className="w-30 h-30 shrink-0 rounded-full object-cover "
                     />
                     <div className="flex flex-col items-center pt-5">
-                      <p className="text-black text-2xl text-center line-clamp-2 break-words">
+                      <p className="text-black text-2xl font-bold text-center line-clamp-2 break-words">
                         {loja.nome}
                       </p>
                     </div>
