@@ -8,7 +8,7 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const rotasLogadas = ["/feed_logado", "/perfil_logado"];
+  const rotasLogadas = ["/feed_logado", "/perfil_logado", "/produtos_logado"];
   const isLoggedIn = rotasLogadas.some((rota) => pathname.startsWith(rota));
 
   // Logout provisório: apenas leva para o feed deslogado
