@@ -15,6 +15,21 @@ export const ACEITAR_IMAGEM: Record<TipoImagemLoja, string> = {
   banner: ".jpg,.jpeg,.png,.webp",
 };
 
+export function validarImagemLoja(
+  tipo: TipoImagemLoja,
+  arquivo: File,
+): string | null {
+  const extensao = arquivo.name.split(".").pop()?.toLowerCase();
+  if (!extensao || !ACEITAR_IMAGEM[tipo].split(",").includes(`.${extensao}`)) {
+    return `Formato inválido para ${ROTULOS_IMAGEM[tipo].toLowerCase()}. Use ${ACEITAR_IMAGEM[tipo].replaceAll(".", "").replaceAll(",", ", ")}.`;
+  }
+  if (arquivo.size === 0) return "O arquivo selecionado está vazio.";
+  const limite = tipo === "logo" ? 2 : 10;
+  if (arquivo.size > limite * 1024 * 1024)
+    return `${ROTULOS_IMAGEM[tipo]} deve ter no máximo ${limite} MB.`;
+  return null;
+}
+
 export function mensagemDeErro(resultado: unknown, padrao: string) {
   if (typeof resultado !== "object" || resultado === null) return padrao;
 
@@ -29,11 +44,10 @@ export function mensagemDeErro(resultado: unknown, padrao: string) {
 export async function enviarImagemLoja(
   lojaId: number,
   tipo: TipoImagemLoja,
-  arquivo: File
-): Promise<{ ok: true } | { ok: false; mensagem: string }> {
-  if (tipo === "logo" && arquivo.size > 2 * 1024 * 1024) {
-    return { ok: false, mensagem: "Logo deve ter no máximo 2 MB." };
-  }
+  arquivo: File,
+): Promise<{ ok: true } | { ok: false; mensagem: string; status?: number }> {
+  const erro = validarImagemLoja(tipo, arquivo);
+  if (erro) return { ok: false, mensagem: erro };
 
   const corpo = new FormData();
   corpo.append("arquivo", arquivo, arquivo.name);
@@ -50,10 +64,14 @@ export async function enviarImagemLoja(
 
     return {
       ok: false,
-      mensagem: mensagemDeErro(
-        resultado,
-        `Não foi possível enviar ${ROTULOS_IMAGEM[tipo].toLowerCase()}.`
-      ),
+      status: resposta.status,
+      mensagem:
+        resposta.status === 401
+          ? "Sua sessão expirou. Faça login novamente."
+          : mensagemDeErro(
+              resultado,
+              `Não foi possível enviar ${ROTULOS_IMAGEM[tipo].toLowerCase()}.`,
+            ),
     };
   } catch {
     return { ok: false, mensagem: "Falha de conexão ao enviar a imagem." };
