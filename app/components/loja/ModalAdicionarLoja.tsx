@@ -1,8 +1,9 @@
 
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { ChangeEvent, FormEvent, ReactNode } from "react";
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
+import CampoArquivo, { IconeUpload, IconeBanner } from "./CampoArquivoLoja";
 import { ACEITAR_IMAGEM } from "./enviarImagemLoja";
 
 export type CategoriaModal = {
@@ -25,106 +26,8 @@ type ModalAdicionarLojaProps = {
   aoAdicionar: (dados: DadosNovaLoja) => Promise<void> | void;
 };
 
-type CampoArquivoProps = {
-  titulo: string;
-  arquivo: File | null;
-  aceitar: string;
-  aoSelecionar: (arquivo: File | null) => void;
-  icone: ReactNode;
-};
-
 const LIMITE_IMAGEM_MB = 10;
 const LIMITE_LOGO_MB = 2;
-
-function CampoArquivo({
-  titulo,
-  arquivo,
-  aceitar,
-  aoSelecionar,
-  icone,
-}: CampoArquivoProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  return (
-    <div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept={aceitar}
-        className="sr-only"
-        onChange={(evento: ChangeEvent<HTMLInputElement>) => {
-          aoSelecionar(evento.target.files?.[0] ?? null);
-        }}
-      />
-
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        className="flex min-h-[135px] w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-[#6A38F3] px-4 py-5 text-center transition-colors hover:bg-purple-50"
-      >
-        <span className="text-[#6A38F3]">{icone}</span>
-
-        <span className="break-all text-sm text-black sm:text-lg">
-          {arquivo ? arquivo.name : titulo}
-        </span>
-
-        {arquivo && (
-          <span className="text-xs text-gray-500">
-            Clique para substituir o arquivo
-          </span>
-        )}
-      </button>
-
-      {arquivo && (
-        <button
-          type="button"
-          onClick={() => {
-            aoSelecionar(null);
-            if (inputRef.current) inputRef.current.value = "";
-          }}
-          className="mt-1 cursor-pointer text-xs text-[#6A38F3] hover:underline"
-        >
-          Remover arquivo
-        </button>
-      )}
-    </div>
-  );
-}
-
-function IconeUpload() {
-  return (
-    <svg
-      width="35"
-      height="35"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      aria-hidden="true"
-    >
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <path d="M14 2v6h6M12 19v-9m-4 4 4-4 4 4" />
-    </svg>
-  );
-}
-
-function IconeBanner() {
-  return (
-    <svg
-      width="35"
-      height="35"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      aria-hidden="true"
-    >
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <circle cx="8" cy="9" r="1.5" />
-      <path d="m4 18 6-6 4 4 3-3 4 4" />
-    </svg>
-  );
-}
 
 export default function ModalAdicionarLoja({
   aberto,

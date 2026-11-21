@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import LojaHero from "@/app/components/loja/LojaHero";
 import LojaAvaliacoes from "@/app/components/loja/LojaAvaliacoes";
 import LojaProdutos from "@/app/components/loja/LojaProdutos";
-import EditarImagensLoja from "@/app/components/loja/EditarImagensLoja";
+import EditarLoja from "@/app/components/loja/EditarLoja";
 import {
   buscarLoja,
   getUsuarioSessao,
@@ -16,9 +16,7 @@ type LojaPageProps = {
   params: Promise<{ id: string }>;
 };
 
-export default async function LojaPage({
-  params,
-}: LojaPageProps) {
+export default async function LojaPage({ params }: LojaPageProps) {
   const { id } = await params;
 
   const [consulta, sessao] = await Promise.all([
@@ -52,7 +50,20 @@ export default async function LojaPage({
         perfilHref={`/perfil/${loja.usuario.id}`}
       />
 
-      {ehDono && <EditarImagensLoja lojaId={loja.id} />}
+      {ehDono && (
+        <EditarLoja
+          loja={{
+            id: loja.id,
+            nome: loja.nome,
+            categoria_id: loja.categoria?.id ?? null,
+            imagens: {
+              "foto-perfil": urlImagemSegura(loja.foto_perfil_url),
+              logo: urlImagemSegura(loja.logo_url),
+              banner: urlImagemSegura(loja.banner_url),
+            },
+          }}
+        />
+      )}
 
       <LojaAvaliacoes
         notaMedia={loja.media_avaliacoes}
