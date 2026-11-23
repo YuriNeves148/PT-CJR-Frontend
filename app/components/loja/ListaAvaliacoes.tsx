@@ -1,6 +1,7 @@
 
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import {
   Estrelas,
@@ -9,12 +10,14 @@ import {
 
 type ListaAvaliacoesProps = {
   avaliacoes: AvaliacaoLoja[];
+  lojaId: number;
 };
 
 const AVALIACOES_POR_PAGINA = 3;
 
 export default function ListaAvaliacoes({
   avaliacoes,
+  lojaId,
 }: ListaAvaliacoesProps) {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [expandidas, setExpandidas] = useState<number[]>([]);
@@ -101,16 +104,25 @@ export default function ListaAvaliacoes({
                     {avaliacao.comentario}
                   </p>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      alternarComentario(avaliacao.id)
-                    }
-                    aria-expanded={expandida}
-                    className="mt-auto self-end pt-2 text-sm text-[#8646FF] hover:underline"
-                  >
-                    {expandida ? "ver menos" : "ver mais"}
-                  </button>
+                  <div className="mt-auto flex items-center justify-end gap-4 pt-2 text-sm text-[#8646FF]">
+                    <Link
+                      href={`/loja/${lojaId}/avaliacoes/${avaliacao.id}`}
+                      className="hover:underline"
+                    >
+                      ver comentários
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        alternarComentario(avaliacao.id)
+                      }
+                      aria-expanded={expandida}
+                      className="hover:underline"
+                    >
+                      {expandida ? "ver menos" : "ver mais"}
+                    </button>
+                  </div>
                 </div>
               </article>
             );
