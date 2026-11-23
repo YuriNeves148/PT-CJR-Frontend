@@ -315,7 +315,11 @@ export default function Home() {
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={loja.logo_url || "/img_feed/loja-sem-imagem.png"}
+                      src={
+                        loja.logo_url
+                          ? `http://localhost:3001${loja.logo_url}`
+                          : "/img_feed/loja-sem-imagem.png"
+                      }
                       alt={`loja ${loja.nome}`}
                       className="w-30 h-30 shrink-0 rounded-full object-cover "
                     />

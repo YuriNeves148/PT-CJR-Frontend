@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: number }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const id = await params;
+  const { id } = await params;
   const token = request.cookies.get("session")?.value;
   if (!token) {
     return NextResponse.json(
@@ -26,10 +26,8 @@ export async function PATCH(
     });
 
     if (!resposta.ok) {
-      return NextResponse.json(
-        { mensagem: "Sessão inválida ou expirada." },
-        { status: 401 },
-      );
+      const erro = await resposta.json();
+      return NextResponse.json(erro, { status: resposta.status });
     }
 
     const usuario = await resposta.json();
@@ -49,7 +47,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const id = await params;
+  const { id } = await params;
   const token = request.cookies.get("session")?.value;
 
   if (!token) {

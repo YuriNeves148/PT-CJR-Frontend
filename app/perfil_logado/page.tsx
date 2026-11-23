@@ -1,9 +1,9 @@
 "use client";
 
+import { error } from "console";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 
 type Usuario = {
   id: number;
@@ -42,6 +42,7 @@ export default function PerfilPage() {
   // Pop-up de edição de perfil
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [perfil, setPerfil] = useState<File | null>(null);
   const [nome, setNome] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -49,11 +50,110 @@ export default function PerfilPage() {
     setNome("");
     setUsername("");
     setEmail("");
+    setPerfil(null);
     setPreview(null);
   }
   function fechar_popup_perfil() {
     limparCampos();
     dialogRef.current?.close();
+  }
+  function abrir_popup_perfil() {
+    setNome(usuario?.nome ?? "");
+    setEmail(usuario?.email ?? "");
+    setUsername(usuario?.username ?? "");
+  }
+  async function salvar_perfil() {
+    try {
+      const resposta = await fetch(`/api/user/${usuario?.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome, username, email }),
+      });
+      if (!resposta.ok) {
+        console.error("erro para salvar: ", resposta.status);
+        return;
+      }
+      const dados = await resposta.json();
+
+      if (perfil) {
+        const formulario = new FormData();
+        formulario.append("foto", perfil);
+
+        const respostaFoto = await fetch(
+          `/api/user/${usuario?.id}/foto-perfil`,
+          { method: "POST", body: formulario },
+        );
+
+        if (!respostaFoto.ok) {
+          console.error("erro ao enviar a foto:", respostaFoto.status);
+          setUsuario(dados);
+          return;
+        }
+
+        const fotoNova = await respostaFoto.json();
+        dados.foto_perfil_url = fotoNova.foto_perfil_url;
+      }
+
+      setUsuario(dados);
+      fechar_popup_perfil();
+    } catch {
+      console.error("Erro de conexao ao salvar: ");
+      return;
+    }
+  }
+  async function deletar_perfil() {
+    if (
+      !confirm(
+        "Tem certeza que deseja excluir sua conta? Essa ação não pode ser desfeita.",
+      )
+    ) {
+      return;
+    }
+    try {
+      const resposta = await fetch(`/api/user/${usuario?.id}`, {
+        method: "DELETE",
+      });
+      if (!resposta.ok) {
+        console.error("erro ao deletar: ", resposta.status);
+        return;
+      }
+
+      await fetch("/api/logout", { method: "POST" });
+      window.location.href = "/login";
+    } catch {
+      console.error("erro ao tentar conexao.");
+      return;
+    }
+  }
+
+  // Envia a nova imagem da loja e substitui a antiga na tela
+  async function trocar_logo_loja(lojaId: number, arquivo: File) {
+    try {
+      const formulario = new FormData();
+      formulario.append("logo", arquivo);
+
+      const resposta = await fetch(`/api/lojas/${lojaId}/imagens/logo`, {
+        method: "POST",
+        body: formulario,
+      });
+      const dados = await resposta.json();
+
+      if (!resposta.ok) {
+        console.error("erro ao enviar a imagem da loja:", resposta.status);
+        alert(dados.message ?? dados.mensagem ?? "Erro ao enviar a imagem.");
+        return;
+      }
+
+      // Troca só a loja alterada, as outras continuam iguais
+      setLojas((atuais) =>
+        atuais.map((loja) =>
+          loja.id === lojaId ? { ...loja, logo_url: dados.logo_url } : loja,
+        ),
+      );
+    } catch {
+      console.error("Erro de conexao ao enviar a imagem da loja.");
+      alert("Não foi possível enviar a imagem da loja.");
+    }
   }
 
   // Pop-up de esqueceu a senha
@@ -77,6 +177,7 @@ export default function PerfilPage() {
     limpa_input();
     dialogRefSenha.current?.close();
   }
+
   useEffect(() => {
     async function verificarLogin() {
       try {
@@ -166,7 +267,7 @@ export default function PerfilPage() {
             alt="foto perfil"
             width={1000}
             height={1000}
-            className="rounded-full transition duration-300 transform hover:scale-110"
+            className="shrink-0 rounded-full transition duration-300 transform hover:scale-110"
           />
         </span>
       </section>
@@ -188,7 +289,10 @@ export default function PerfilPage() {
             {ehDonoDoPerfil && (
               <button
                 type="button"
-                onClick={() => dialogRef.current?.showModal()}
+                onClick={() => {
+                  abrir_popup_perfil();
+                  dialogRef.current?.showModal();
+                }}
                 className="w-85 bg-[#7137f5] text-white px-6 py-3 rounded-full font-semibold cursor-pointer hover:bg-[#8755ff] -translate-y-20"
               >
                 Editar Perfil
@@ -215,6 +319,7 @@ export default function PerfilPage() {
                   className="flex flex-col bg-white rounded-2xl p-8 font-bold text-2xl gap-1"
                 >
                   <span className="flex items-center justify-center">
+                    {/* IR PARA A PAGINA DO PRODUTO */}
                     <Image
                       src={
                         produto.imagem && produto.imagem.length > 0
@@ -267,16 +372,10 @@ export default function PerfilPage() {
                   className="flex flex-row w-[550px] h-45 shrink-0 rounded-2xl bg-white text-black shadow-sm p-10"
                 >
                   <p className="text-5xl">{loja.nome}</p>
-                  <Image
-                    src={
-                      loja.logo_url && loja.logo_url.length > 0
-                        ? `http://localhost:3001${loja.logo_url[0]}`
-                        : "/img_feed/loja-sem-imagem.png"
-                    }
-                    alt={loja.nome}
-                    width={100}
-                    height={100}
-                    className="ml-auto rounded-full border-solid border-black border-1"
+                  <LogoLoja
+                    loja={loja}
+                    podeEditar={ehDonoDoPerfil}
+                    aoEscolher={(arquivo) => trocar_logo_loja(loja.id, arquivo)}
                   />
                 </div>
               ))}
@@ -318,7 +417,11 @@ export default function PerfilPage() {
           ></Image>
         </button>
 
-        <FotoPerfil preview={preview} setPreview={setPreview} />
+        <FotoPerfil
+          preview={preview}
+          setPreview={setPreview}
+          setFoto={setPerfil}
+        />
 
         <div className="flex flex-col gap-4">
           <input
@@ -344,6 +447,7 @@ export default function PerfilPage() {
           <button
             type="button"
             className="cursor-pointer hover:opacity-70 text-2xl text-red-800 border-3 border-red-500 w-100 shadow-2xl rounded-full p-3"
+            onClick={() => deletar_perfil()}
           >
             Deletar Conta
           </button>
@@ -356,7 +460,9 @@ export default function PerfilPage() {
           </button>
           <button
             type="button"
-            onClick={() => fechar_popup_perfil()}
+            onClick={() => {
+              salvar_perfil();
+            }}
             className="cursor-pointer hover:opacity-70 text-2xl bg-[#6A38F3] text-white w-100 shadow-2xl rounded-full p-3"
           >
             Salvar
@@ -484,9 +590,11 @@ export default function PerfilPage() {
 function FotoPerfil({
   preview,
   setPreview,
+  setFoto,
 }: {
   preview: string | null;
   setPreview: (url: string | null) => void;
+  setFoto: (arquivo: File | null) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -501,7 +609,7 @@ function FotoPerfil({
     if (preview) URL.revokeObjectURL(preview);
 
     setPreview(URL.createObjectURL(arquivo));
-
+    setFoto(arquivo);
     // Permite escolher o mesmo arquivo de novo depois
     e.target.value = "";
   }
@@ -509,6 +617,7 @@ function FotoPerfil({
   function removerFoto() {
     if (preview) URL.revokeObjectURL(preview);
     setPreview(null);
+    setFoto(null);
   }
 
   return (
@@ -560,6 +669,73 @@ function FotoPerfil({
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+// imagem da loja: o dono pode clicar para trocar
+function LogoLoja({
+  loja,
+  podeEditar,
+  aoEscolher,
+}: {
+  loja: Lojas;
+  podeEditar: boolean;
+  aoEscolher: (arquivo: File) => Promise<void>;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [enviando, setEnviando] = useState(false);
+
+  async function aoEscolherArquivo(e: React.ChangeEvent<HTMLInputElement>) {
+    const arquivo = e.target.files?.[0];
+
+    // Permite escolher o mesmo arquivo de novo depois
+    e.target.value = "";
+
+    if (!arquivo) return;
+
+    setEnviando(true);
+    await aoEscolher(arquivo);
+    setEnviando(false);
+  }
+
+  const imagem = (
+    <Image
+      src={
+        loja.logo_url
+          ? `http://localhost:3001${loja.logo_url}`
+          : "/img_feed/loja-sem-imagem.png"
+      }
+      alt={loja.nome}
+      width={100}
+      height={100}
+      className="h-25 w-25 rounded-full border border-solid border-black object-cover"
+    />
+  );
+
+  if (!podeEditar) {
+    return <div className="ml-auto shrink-0">{imagem}</div>;
+  }
+
+  return (
+    <div className="ml-auto shrink-0">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        onChange={aoEscolherArquivo}
+        className="hidden"
+      />
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={enviando}
+        aria-label={`Alterar imagem da loja ${loja.nome}`}
+        title="Alterar imagem da loja"
+        className="cursor-pointer rounded-full duration-200 hover:opacity-70 disabled:cursor-wait disabled:opacity-40"
+      >
+        {imagem}
+      </button>
     </div>
   );
 }
