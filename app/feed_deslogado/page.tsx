@@ -34,7 +34,7 @@ export default function Home() {
           <p className="text-black font-semibold text-3xl pt-10">Categorias</p>
           <nav className=" overflow-hidden flex flex-block flex-row gap-15 pb-5 pt-10">
             <Image
-              src="/img_feed/mercado.png"
+              src="/img_feed/categorias/mercado.png"
               alt="mercado"
               width={100}
               height={100}
@@ -57,7 +57,7 @@ export default function Home() {
             <nav className="flex flex-nowrap gap-10 overflow-hidden pb-5 pt-10 peer-open:flex-wrap">
               <span className="bg-[#FFFFFF] p-5 pb-11 shrink-0 rounded-2xl w-65 flex flex-col items-center">
                 <Image
-                  src="/img_feed/prd_relogio.png"
+                  src="/img_feed/produtos/prd_relogio.png"
                   alt="relógio"
                   width={100}
                   height={100}
@@ -117,7 +117,7 @@ export default function Home() {
             <nav className="flex flex-nowrap shrink-0 items-center gap-11 overflow-hidden pb-40 pt-10 peer-open:flex-wrap">
               <span className="shrink-0 p-5 max-w-48 flex flex-col items-center">
                 <Image
-                  src="/img_feed/logo_amoca.png"
+                  src="/img_feed/lojas/logo_amoca.png"
                   alt="loja amoca"
                   width={100}
                   height={100}

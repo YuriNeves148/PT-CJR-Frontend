@@ -1,9 +1,128 @@
 "use client";
+import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { urlImagem } from "@/app/lib/urlImagem";
+
+type Loja = {
+  id: number;
+  nome: string;
+  descricao?: string | null;
+  logo_url?: string | null;
+  categoria_pai: number | null;
+};
+
+type Categoria = {
+  id: number;
+  nome: string;
+  categoria_pai_id: number | null;
+};
+function gerarSlug(nome: string): string {
+  return nome.toLocaleLowerCase().normalize("NFD").trim();
+}
+
+type ImagemProduto = {
+  id: number;
+  produto_id: number;
+  url_imagem: string;
+  ordem: number;
+};
+
+type Produtos = {
+  id: number;
+  nome: string;
+  descricao: string | null;
+  preco: number;
+  estoque: number;
+  imagem: ImagemProduto[];
+};
 
 export default function Home() {
-  const disponivel = false;
+  /* para LOJAS */
+  const [lojas, setLojas] = useState<Loja[]>([]);
+  const [carregandoLojas, setCarregandoLojas] = useState(true);
+  const [erroLojas, setErroLojas] = useState("");
+  useEffect(() => {
+    async function carregarLojas() {
+      try {
+        const resposta = await fetch("/api/lojas");
+
+        if (resposta.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
+        if (!resposta.ok) {
+          setErroLojas("Não foi possível carregar as lojas.");
+          return;
+        }
+
+        const dados: Loja[] = await resposta.json();
+        setLojas(dados);
+      } catch {
+        setErroLojas("Erro de conexão com o servidor.");
+      } finally {
+        setCarregandoLojas(false);
+      }
+    }
+
+    carregarLojas();
+  }, []);
+
+  /* para CATEGORIAS */
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [carregandoCategorias, setCarregandoCategorias] = useState(true);
+  const [erroCategorias, setErroCategorias] = useState("");
+  useEffect(() => {
+    async function carregarCategorias() {
+      try {
+        const resposta = await fetch("/api/categorias");
+
+        if (!resposta.ok) {
+          setErroCategorias("Não foi possível carregar as categorias.");
+          return;
+        }
+
+        const dados: Categoria[] = await resposta.json();
+        setCategorias(dados.filter((c) => c.categoria_pai_id === null));
+      } catch {
+        setErroCategorias("Erro de conexão com o servidor.");
+      } finally {
+        setCarregandoCategorias(false);
+      }
+    }
+
+    carregarCategorias();
+  }, []);
+
+  /* para PRODUTOS */
+  const [produtos, setProdutos] = useState<Produtos[]>([]);
+  const [carregandoProdutos, setCarregandoProdutos] = useState(true);
+  const [erroProdutos, setErroProdutos] = useState("");
+  useEffect(() => {
+    async function carregarProdutos() {
+      try {
+        const resposta = await fetch("/api/produtos");
+
+        if (resposta.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
+        if (!resposta.ok) {
+          setErroProdutos("Não foi possível carregar os produtos.");
+          return;
+        }
+
+        const dados: Produtos[] = await resposta.json();
+        setProdutos(dados);
+      } catch {
+        setErroProdutos("Erro de conexão com o servidor.");
+      } finally {
+        setCarregandoProdutos(false);
+      }
+    }
+
+    carregarProdutos();
+  }, []);
 
   return (
     <main className="w-full overflow-x-hidden">
@@ -31,14 +150,40 @@ export default function Home() {
             placeholder="Procurar por..."
           ></input>
           <p className="text-black font-semibold text-3xl pt-10">Categorias</p>
-          <nav className=" overflow-hidden flex flex-block flex-row gap-15 pb-5 pt-10">
-            <Image
-              src="/img_feed/mercado.png"
-              alt="mercado"
-              width={100}
-              height={100}
-              className="w-30 h-30 shrink-0 object-cover"
-            />
+          <nav className="overflow-hidden flex flex-row gap-15 pb-5 pt-10">
+            {carregandoCategorias ? (
+              <p className="text-black text-xl">Carregando categorias...</p>
+            ) : erroCategorias ? (
+              <p className="text-red-600 text-xl">{erroCategorias}</p>
+            ) : categorias.length === 0 ? (
+              <p className="text-black text-xl">
+                Nenhuma categoria cadastrada.
+              </p>
+            ) : (
+              categorias.map((categoria) => (
+                <span
+                  key={categoria.id}
+                  className="bg-white pb-5 p-3 rounded-4xl"
+                >
+                  <Link
+                    key={categoria.id}
+                    href={`/categoria/${gerarSlug(categoria.nome)}`}
+                    className="flex flex-col items-center shrink-0"
+                  >
+                    <Image
+                      src="/img_feed/sem-imagem.png"
+                      alt={categoria.nome}
+                      width={100}
+                      height={100}
+                      className="w-30 h-30 shrink-0 object-cover rounded-2xl"
+                    />
+                    <p className="text-black text-xl capitalize">
+                      {categoria.nome}
+                    </p>
+                  </Link>
+                </span>
+              ))
+            )}
           </nav>
 
           {/* INFO. DE PRODUTOS */}
@@ -54,27 +199,52 @@ export default function Home() {
               </summary>
             </details>
             <nav className="flex flex-nowrap gap-10 overflow-hidden pb-5 pt-10 peer-open:flex-wrap">
-              <span className="bg-[#FFFFFF] p-5 pb-11 shrink-0 rounded-2xl w-65 flex flex-col items-center">
-                <Image
-                  src="/img_feed/prd_relogio.png"
-                  alt="relógio"
-                  width={100}
-                  height={100}
-                  className="w-30 h-30 shrink-0 object-cover"
-                />
-                <div className="pt-5 mr-auto">
-                  <p className="line-clamp-2 break-words text-black font-bold text-2xl">
-                    titulo
-                  </p>
-                  <p className="text-black font-bold text-2xl">R$ preço</p>
-                  <p
-                    className={`font-bold text-2xl ${disponivel ? "text-green-600" : "text-red-600"}`}
-                  >
-                    {disponivel ? "Disponível" : "Indisponível"}
-                    {/* está sendo pego da variavel global */}
-                  </p>{" "}
-                </div>
-              </span>
+              {carregandoProdutos ? (
+                <p className="text-black text-xl">Carregando produtos...</p>
+              ) : erroProdutos ? (
+                <p className="text-red-600 text-xl">{erroProdutos}</p>
+              ) : produtos.length === 0 ? (
+                <p className="text-black text-xl">Nenhum produto cadastrado.</p>
+              ) : (
+                produtos.map((produto) => {
+                  const disponivel = produto.estoque > 0;
+
+                  return (
+                    <Link
+                      key={produto.id}
+                      href={`/produtos_logado?id=${produto.id}`}
+                      className="bg-[#FFFFFF] p-5 pb-11 shrink-0 rounded-2xl w-65 flex flex-col items-center"
+                    >
+                      <Image
+                        src={urlImagem(
+                          produto.imagem?.[0]?.url_imagem,
+                          "/img_feed/adicione_imagem.png",
+                        )}
+                        alt={produto.nome}
+                        width={100}
+                        height={100}
+                        className="w-30 h-30 shrink-0 object-cover"
+                      />
+                      <div className="pt-5 mr-auto">
+                        <p className="line-clamp-2 break-words text-black font-bold text-2xl">
+                          {produto.nome}
+                        </p>
+                        <p className="text-black font-bold text-2xl">
+                          {Number(produto.preco).toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          })}
+                        </p>
+                        <p
+                          className={`font-bold text-2xl ${disponivel ? "text-green-600" : "text-red-600"}`}
+                        >
+                          {disponivel ? "Disponível" : "Indisponível"}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })
+              )}
             </nav>
           </div>
 
@@ -100,11 +270,29 @@ export default function Home() {
                     </svg>
                   </summary>
 
+                  {/* FILTROS */}
                   <div className="absolute top-full z-20 w-120 rounded-lg border border-gray-300 bg-white p-4 text-xl text-black shadow-lg">
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" name="categoria" value="mercado" />
-                      Mercado
-                    </label>
+                    <div>
+                      {carregandoCategorias ? (
+                        <p className="text-black text-xl">
+                          Carregando categorias
+                        </p>
+                      ) : (
+                        categorias.map((categoria) => (
+                          <label
+                            key={categoria.id}
+                            className="flex items-center gap-2 text-transform: capitalize"
+                          >
+                            <input
+                              type="checkbox"
+                              name="categoria"
+                              value={categoria.nome}
+                            />
+                            {categoria.nome}
+                          </label>
+                        ))
+                      )}
+                    </div>
                   </div>
                 </details>
                 <span className="ml-10 pr-10 text-blue-600 text-lg hover:text-blue-900">
@@ -114,23 +302,35 @@ export default function Home() {
             </details>
 
             <nav className="flex flex-nowrap shrink-0 items-center gap-11 overflow-hidden pb-40 pt-10 peer-open:flex-wrap">
-              <span className="shrink-0 p-5 max-w-48 flex flex-col items-center">
-                <Image
-                  src="/img_feed/logo_amoca.png"
-                  alt="loja amoca"
-                  width={100}
-                  height={100}
-                  className="w-30 h-30 shrink-0 rounded-full object-cover"
-                />
-                <div className="flex flex-col items-center pt-5">
-                  <p className="text-black text-3xl text-center line-clamp-2 break-words">
-                    titulo
-                  </p>
-                  <p className="text-blue-800 text-xl text-center truncate max-w-full">
-                    categoria
-                  </p>
-                </div>
-              </span>
+              {carregandoLojas ? (
+                <p className="text-black text-xl">Carregando lojas...</p>
+              ) : erroLojas ? (
+                <p className="text-red-600 text-xl">{erroLojas}</p>
+              ) : lojas.length === 0 ? (
+                <p className="text-black text-xl">Nenhuma loja cadastrada.</p>
+              ) : (
+                lojas.map((loja) => (
+                  <span
+                    key={loja.id}
+                    className="shrink-0 p-5 max-w-48 flex flex-col items-center"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={urlImagem(
+                        loja.logo_url,
+                        "/img_feed/loja-sem-imagem.png",
+                      )}
+                      alt={`loja ${loja.nome}`}
+                      className="w-30 h-30 shrink-0 rounded-full object-cover "
+                    />
+                    <div className="flex flex-col items-center pt-5">
+                      <p className="text-black text-2xl font-bold text-center line-clamp-2 break-words">
+                        {loja.nome}
+                      </p>
+                    </div>
+                  </span>
+                ))
+              )}
             </nav>
           </div>
         </div>

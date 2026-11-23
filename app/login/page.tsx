@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const router = useRouter();
 
   // Pop-up de esqueceu a senha
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -63,7 +65,7 @@ export default function LoginPage() {
       const dados = await resposta.json();
 
       if (dados.sucesso === true) {
-        console.log("Login realizado com sucesso!");
+        router.push("/feed_logado");
       }
     } catch (erro) {
       console.error("Erro ao conectar com o backend:", erro);

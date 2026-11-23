@@ -83,3 +83,35 @@ export async function POST(request: Request) {
     );
   }
 }
+
+// Lojas do usuário logado
+export async function GET() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("session")?.value;
+
+  if (!token) {
+    return NextResponse.json({ mensagem: "Não autenticado." }, { status: 401 });
+  }
+
+  try {
+    const resposta = await fetch(`${BACKEND_URL}/lojas/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+
+    if (!resposta.ok) {
+      return NextResponse.json(
+        { mensagem: "Não foi possível carregar as lojas." },
+        { status: resposta.status },
+      );
+    }
+
+    const dados = await resposta.json();
+    return NextResponse.json(dados);
+  } catch {
+    return NextResponse.json(
+      { mensagem: "Servidor indisponível." },
+      { status: 502 },
+    );
+  }
+}
