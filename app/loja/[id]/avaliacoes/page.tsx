@@ -68,6 +68,7 @@ export default async function AvaliacoesPage({
 
         <ListaAvaliacoes
           avaliacoes={avaliacoes}
+          lojaId={loja.id}
         />
       </div>
     </main>
