@@ -314,12 +314,12 @@ export default function PerfilPage() {
             </div>
             <div className="mt-6 flex flex-wrap gap-8 pb-4">
               {produtos.map((produto) => (
-                <div
+                <Link
                   key={produto.id}
+                  href={`/produtos_logado?id=${produto.id}`}
                   className="flex flex-col bg-white rounded-2xl p-8 font-bold text-2xl gap-1"
                 >
                   <span className="flex items-center justify-center">
-                    {/* IR PARA A PAGINA DO PRODUTO */}
                     <Image
                       src={
                         produto.imagem && produto.imagem.length > 0
@@ -341,7 +341,7 @@ export default function PerfilPage() {
                   >
                     {produto.estoque > 0 ? "DISPONÍVEL" : "INDISPOONÍVEL"}
                   </p>
-                </div>
+                </Link>
               ))}
             </div>
 

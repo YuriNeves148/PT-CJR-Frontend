@@ -209,8 +209,9 @@ export default function Home() {
                   const disponivel = produto.estoque > 0;
 
                   return (
-                    <span
+                    <Link
                       key={produto.id}
+                      href={`/produtos_logado?id=${produto.id}`}
                       className="bg-[#FFFFFF] p-5 pb-11 shrink-0 rounded-2xl w-65 flex flex-col items-center"
                     >
                       <Image
@@ -240,7 +241,7 @@ export default function Home() {
                           {disponivel ? "Disponível" : "Indisponível"}
                         </p>
                       </div>
-                    </span>
+                    </Link>
                   );
                 })
               )}
