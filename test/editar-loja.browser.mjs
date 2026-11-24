@@ -61,13 +61,13 @@ try {
     aguardar(() => avaliar(expression), descricao);
   const clicar = (texto) =>
     avaliar(
-      `(() => { const b = [...document.querySelectorAll('button')].find(b => b.textContent.trim() === ${JSON.stringify(texto)}); if(!b) throw Error('Botão ausente: '+${JSON.stringify(texto)}); b.focus(); b.click(); })()`,
+      `(() => { const b = [...document.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === ${JSON.stringify(texto)} || b.textContent.trim() === ${JSON.stringify(texto)}); if(!b) throw Error('Botão ausente: '+${JSON.stringify(texto)}); b.focus(); b.click(); })()`,
     );
   const preencher = (selector, valor) =>
     avaliar(
       `(() => { const e = document.querySelector(${JSON.stringify(selector)}); Object.getOwnPropertyDescriptor(${selector.includes("categoria") ? "HTMLSelectElement" : "HTMLInputElement"}.prototype, 'value').set.call(e, ${JSON.stringify(valor)}); e.dispatchEvent(new Event(${selector.includes("categoria") ? "'change'" : "'input'"}, {bubbles:true})); })()`,
     );
-  const navegar = async (token = "dona-fixture") => {
+  const navegar = async (token = "dona-fixture", caminho = "/loja/82") => {
     await chamar("Network.clearBrowserCookies");
     if (token)
       await chamar("Network.setCookie", {
@@ -77,9 +77,9 @@ try {
         httpOnly: true,
         sameSite: "Lax",
       });
-    await chamar("Page.navigate", { url: `${base}/loja/82` });
+    await chamar("Page.navigate", { url: `${base}${caminho}` });
     await esperar(
-      `document.querySelector('h1')?.textContent.trim() === ${JSON.stringify(backend.loja.nome)}`,
+      `location.pathname === ${JSON.stringify(caminho)} && document.querySelector('h1')?.textContent.trim() === ${JSON.stringify(caminho.startsWith("/perfil/") ? backend.loja.usuario.nome : backend.loja.nome)}`,
       "carregar loja",
     );
     // Aguarda hidratação do controle (fetch da Navbar é disparado pelo React).
@@ -107,7 +107,7 @@ try {
   };
   const arquivo = (tipo, nome) =>
     avaliar(
-      `(() => { const i = [...document.querySelectorAll('input[type=file]')][${tipo}]; const d = new DataTransfer(); d.items.add(new File(['fixture'], ${JSON.stringify(nome)}, {type:'image/png'})); i.files = d.files; i.dispatchEvent(new Event('change',{bubbles:true})); })()`,
+      `(() => { const i = [...document.querySelectorAll('[role=dialog] input[type=file]')][${tipo}]; const d = new DataTransfer(); d.items.add(new File(['fixture'], ${JSON.stringify(nome)}, {type:'image/png'})); i.files = d.files; i.dispatchEvent(new Event('change',{bubbles:true})); })()`,
     );
   const screenshot = async (nome) => {
     await mkdir(artefatos, { recursive: true });
@@ -119,7 +119,7 @@ try {
     await navegar(token);
     assert.equal(
       await avaliar(
-        "[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Editar loja')",
+        "!!document.querySelector('button[aria-label=\"Editar loja\"]')",
       ),
       false,
     );
@@ -143,6 +143,94 @@ try {
   assert.equal(expirado.status, 401, expirado.body);
   ok("API recusa token expirado");
 
+  for (const token of [null, "outro-fixture", "expirada-fixture"]) {
+    await navegar(token, "/perfil/101");
+    assert.equal(
+      await avaliar(
+        "!!document.querySelector('button[aria-label=\"Cadastrar loja\"]')",
+      ),
+      false,
+    );
+  }
+  ok(
+    "cadastro no perfil oculto para visitantes, outro usuário e sessão expirada",
+  );
+  await navegar("dona-fixture", "/perfil/101");
+  await esperar(
+    "!document.querySelector('button[aria-label=\"Cadastrar loja\"]').disabled",
+    "habilitar cadastro no perfil",
+  );
+  for (const width of [1440, 768, 375, 320]) {
+    await chamar("Emulation.setDeviceMetricsOverride", {
+      width,
+      height: 960,
+      deviceScaleFactor: 1,
+      mobile: width < 768,
+    });
+    assert.equal(
+      await avaliar(`(() => {
+      const botoes = document.querySelectorAll('button[aria-label="Cadastrar loja"]');
+      const botao = botoes[0], r = botao.getBoundingClientRect();
+      const titulo = botao.parentElement.querySelector('h2').getBoundingClientRect();
+      return botoes.length === 1 && !botao.textContent.trim() && r.width === 44 && r.height === 44 && r.right <= innerWidth && Math.abs((r.top + r.height/2) - (titulo.top + titulo.height/2)) < 2;
+    })()`),
+      true,
+    );
+    await avaliar(
+      "document.querySelector('button[aria-label=\"Cadastrar loja\"]').scrollIntoView({block:'center'})",
+    );
+    if ([1440, 375].includes(width))
+      await screenshot(`acao-cadastrar-${width}.png`);
+  }
+  const antesDeCancelarCadastro = backend.estado.chamadas.length;
+  await clicar("Cadastrar loja");
+  await esperar(
+    "!!document.querySelector('#nome-nova-loja')",
+    "abrir cadastro pelo mais no perfil",
+  );
+  assert.equal(await avaliar("location.pathname"), "/perfil/101");
+  assert.equal(
+    await avaliar(
+      "document.querySelectorAll('[role=dialog] input[type=file]').length",
+    ),
+    3,
+  );
+  await avaliar(
+    "document.querySelector('button[aria-label=\"Fechar modal\"]').click()",
+  );
+  await esperar(
+    "!document.querySelector('[role=dialog]')",
+    "cancelar cadastro no perfil",
+  );
+  assert.equal(backend.estado.chamadas.length, antesDeCancelarCadastro);
+  ok(
+    "mais de cadastro alinhado ao título Lojas, responsivo, abre modal e cancela sem escrita",
+  );
+
+  await navegar();
+  for (const width of [1440, 768, 375, 320]) {
+    await chamar("Emulation.setDeviceMetricsOverride", {
+      width,
+      height: 960,
+      deviceScaleFactor: 1,
+      mobile: width < 768,
+    });
+    assert.equal(
+      await avaliar(`(() => {
+      const botoes = document.querySelectorAll('button[aria-label="Editar loja"]');
+      const botao = botoes[0], r = botao.getBoundingClientRect();
+      const hero = botao.closest('section').getBoundingClientRect();
+      return botoes.length === 1 && !botao.textContent.trim() && r.width === 44 && r.height === 44 && r.right <= hero.right && r.left > hero.left + hero.width/2 && Math.abs(r.top - hero.top - hero.height*0.2) < 1;
+    })()`),
+      true,
+    );
+    if ([1440, 375].includes(width))
+      await screenshot(`acao-editar-${width}.png`);
+  }
+  ok(
+    "mais de edição único sobre o banner, no canto superior direito, sem texto nem lápis em desktop e mobile",
+  );
+
   await chamar("Emulation.setDeviceMetricsOverride", {
     width: 848,
     height: 960,
@@ -150,7 +238,32 @@ try {
     mobile: false,
   });
   await navegar();
-  await abrir();
+  await avaliar(
+    "document.querySelector('button[aria-label=\"Editar loja\"]').focus()",
+  );
+  assert.equal(
+    await avaliar("document.activeElement.getAttribute('aria-label')"),
+    "Editar loja",
+  );
+  await chamar("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "Enter",
+    code: "Enter",
+    windowsVirtualKeyCode: 13,
+    text: "\r",
+    unmodifiedText: "\r",
+  });
+  await chamar("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "Enter",
+    code: "Enter",
+    windowsVirtualKeyCode: 13,
+  });
+  await esperar(
+    "document.querySelector('dialog[open] input[type=text]') && !document.querySelector('dialog button[type=submit]').disabled",
+    "abrir edição com Enter",
+  );
+  assert.equal(await avaliar("location.pathname"), "/loja/82");
   assert.equal(
     await avaliar("document.querySelector('#editar-nome-loja').value"),
     "Rare Beauty",
@@ -202,7 +315,7 @@ try {
   });
   await esperar("!document.querySelector('dialog[open]')", "fechar com Escape");
   assert.equal(
-    await avaliar("document.activeElement.textContent.trim()"),
+    await avaliar("document.activeElement.getAttribute('aria-label')"),
     "Editar loja",
   );
   ok("Escape fecha e devolve foco");
@@ -453,12 +566,11 @@ try {
     deviceScaleFactor: 1,
     mobile: false,
   });
-  await chamar("Page.navigate", { url: `${base}/teste-modal-loja` });
   await esperar(
-    "[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Adicionar loja' && !b.disabled)",
+    "!!document.querySelector('button[aria-label=\"Cadastrar loja\"]') && !document.querySelector('button[aria-label=\"Cadastrar loja\"]').disabled",
     "carregar cadastro existente",
   );
-  await clicar("Adicionar loja");
+  await clicar("Cadastrar loja");
   await esperar(
     "!!document.querySelector('#nome-nova-loja')",
     "abrir modal de cadastro",
@@ -490,6 +602,11 @@ try {
   ok(
     "cadastro existente preservado: criação, seleção e remoção de arquivo, foto, logo SVG e banner",
   );
+  await esperar(
+    "[...document.querySelectorAll('a[href=\"/loja/83\"]')].some(a=>a.textContent.includes('Cadastro após refatoração'))",
+    "atualizar lista de lojas no perfil após cadastro",
+  );
+  ok("loja cadastrada pelo mais aparece na lista do perfil após refresh");
   console.log(
     `${verificacoes} verificações de navegador concluídas. Capturas: ${artefatos}`,
   );

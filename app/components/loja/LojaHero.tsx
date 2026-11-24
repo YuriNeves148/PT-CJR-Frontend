@@ -1,6 +1,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import type { ReactNode } from "react";
 
 type LojaHeroProps = {
   nome: string;
@@ -9,6 +10,7 @@ type LojaHeroProps = {
   logoUrl?: string | null;
   proprietario: string;
   perfilHref?: string;
+  acoes?: ReactNode;
 };
 
 export default function LojaHero({
@@ -18,6 +20,7 @@ export default function LojaHero({
   logoUrl,
   proprietario,
   perfilHref,
+  acoes,
 }: LojaHeroProps) {
   return (
     <section
@@ -46,6 +49,12 @@ export default function LojaHero({
             "linear-gradient(to bottom, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.65) 35%, rgba(0,0,0,0.35) 70%, rgba(0,0,0,0.25) 100%)",
         }}
       />
+
+      {acoes && (
+        <div className="absolute right-5 top-[20%] z-20 sm:right-8 lg:right-[8%]">
+          {acoes}
+        </div>
+      )}
 
       {/* Nome e categoria da loja */}
       <div className="relative z-10 mx-auto w-fit max-w-full px-6">
