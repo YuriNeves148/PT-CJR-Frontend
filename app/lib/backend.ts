@@ -4,6 +4,7 @@
 import { cookies } from "next/headers";
 import type { AvaliacaoLoja } from "@/app/components/loja/LojaAvaliacoes";
 import type { ProdutoLoja } from "@/app/components/loja/ProdutoCard";
+import type { Review } from "@/app/components/avaliacoes/ListaReviews";
 
 export const BACKEND_URL = (
   process.env.BACKEND_URL ?? "http://localhost:3001"
@@ -61,6 +62,29 @@ export type LojaApi = {
   avaliacoes_loja: AvaliacaoLojaApi[];
   media_avaliacoes: number | null;
   total_avaliacoes: number;
+};
+
+// Resposta de GET /produtos/:id
+export type ProdutoDetalheApi = {
+  id: number;
+  loja_id: number;
+  categoria_id: number;
+  nome: string;
+  descricao: string | null;
+  preco: string | number;
+  estoque: number;
+  imagem?: { id: number; url_imagem: string; ordem: number }[];
+};
+
+// Resposta de GET /avaliacoes-produtos e GET /avaliacoes-loja
+export type AvaliacaoApi = {
+  id: number;
+  nota: number;
+  comentario: string | null;
+  createdAt: string | null;
+  produto_id?: number;
+  loja_id?: number;
+  usuario: { id: number; nome: string; foto_perfil_url: string | null };
 };
 
 export type PerfilPublico = {
@@ -159,6 +183,61 @@ export function buscarPerfil(id: string): Promise<Consulta<PerfilPublico>> {
   return consultarPublico<PerfilPublico>(`/user/${id}`);
 }
 
+export function buscarProduto(id: string): Promise<Consulta<ProdutoDetalheApi>> {
+  if (!idValido(id)) return Promise.resolve({ status: "nao-encontrado" });
+  return consultarPublico<ProdutoDetalheApi>(`/produtos/${id}`);
+}
+
+export function buscarCategoria(id: number) {
+  return consultarPublico<{ id: number; nome: string }>(`/categorias/${id}`);
+}
+
+export function buscarAvaliacoesProduto(produtoId: number) {
+  return consultarPublico<AvaliacaoApi[]>(`/avaliacoes-produtos?produto_id=${produtoId}`);
+}
+
+// Avaliações escritas pelo usuário, com o nome e o link do que foi avaliado.
+// Da mais recente para a mais antiga; null se o backend falhar.
+export async function buscarReviewsDoUsuario(usuarioId: number): Promise<Review[] | null> {
+  const [deLojas, deProdutos] = await Promise.all([
+    consultarPublico<AvaliacaoApi[]>(`/avaliacoes-loja?usuario_id=${usuarioId}`),
+    consultarPublico<AvaliacaoApi[]>(`/avaliacoes-produtos?usuario_id=${usuarioId}`),
+  ]);
+  if (deLojas.status !== "ok" || deProdutos.status !== "ok") return null;
+
+  const avaliacoes = avaliacoesValidas([...deLojas.dados, ...deProdutos.dados]).sort(
+    (a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")
+  );
+  const idsUnicos = (ids: (number | undefined)[]) => [
+    ...new Set(ids.filter((id) => id !== undefined)),
+  ];
+  // Cada loja ou produto é consultado uma vez só, mesmo com várias avaliações.
+  const nomes = new Map<string, string>();
+  await Promise.all([
+    ...idsUnicos(avaliacoes.map((a) => a.loja_id)).map(async (id) => {
+      const loja = await buscarLoja(String(id));
+      if (loja.status === "ok") nomes.set(`loja-${id}`, loja.dados.nome);
+    }),
+    ...idsUnicos(avaliacoes.map((a) => a.produto_id)).map(async (id) => {
+      const produto = await buscarProduto(String(id));
+      if (produto.status === "ok") nomes.set(`produto-${id}`, produto.dados.nome);
+    }),
+  ]);
+
+  return avaliacoes.map((avaliacao) => {
+    const ehLoja = avaliacao.loja_id !== undefined;
+    const nome = nomes.get(ehLoja ? `loja-${avaliacao.loja_id}` : `produto-${avaliacao.produto_id}`);
+    return {
+      ...mapearReview(avaliacao),
+      chave: `${ehLoja ? "loja" : "produto"}-${avaliacao.id}`,
+      titulo: nome ?? (ehLoja ? "Loja" : "Produto"),
+      href: ehLoja
+        ? `/loja/${avaliacao.loja_id}`
+        : `/produtos_logado?id=${avaliacao.produto_id}`,
+    };
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Mapeamentos para os componentes existentes
 // ---------------------------------------------------------------------------
@@ -219,4 +298,35 @@ export function mapearAvaliacao(avaliacao: AvaliacaoLojaApi): AvaliacaoLoja {
     nota: avaliacao.nota,
     comentario: avaliacao.comentario ?? "",
   };
+}
+
+// O backend só aceita notas de 1 a 5. Registros antigos fora disso são
+// ignorados para não distorcer a média.
+export function avaliacoesValidas(avaliacoes: AvaliacaoApi[]) {
+  return avaliacoes.filter(({ nota }) => nota >= 1 && nota <= 5);
+}
+
+export function mediaAvaliacoes(avaliacoes: { nota: number }[]) {
+  if (avaliacoes.length === 0) return null;
+  return avaliacoes.reduce((soma, { nota }) => soma + nota, 0) / avaliacoes.length;
+}
+
+export function mapearReview(avaliacao: AvaliacaoApi): Review {
+  return {
+    chave: String(avaliacao.id),
+    titulo: avaliacao.usuario.nome,
+    href: `/perfil/${avaliacao.usuario.id}`,
+    autor: avaliacao.usuario.nome,
+    fotoUrl: urlImagemSegura(avaliacao.usuario.foto_perfil_url),
+    nota: avaliacao.nota,
+    comentario: avaliacao.comentario ?? "",
+  };
+}
+
+// Todas as imagens do produto, na ordem definida pela loja.
+export function imagensDoProduto(produto: ProdutoDetalheApi) {
+  return [...(produto.imagem ?? [])]
+    .sort((a, b) => a.ordem - b.ordem)
+    .map((imagem) => urlImagemSegura(imagem.url_imagem))
+    .filter((url) => url !== null);
 }

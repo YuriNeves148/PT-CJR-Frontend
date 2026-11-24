@@ -14,10 +14,11 @@ interface EditarProdutoModalProps {
   produtoId: number;
   onFechar: () => void;
   onAlterado: () => void; // chamado depois de salvar ou deletar, ex: para recarregar a lista
+  onDeletado?: () => void; // se for passado, é chamado no lugar de onAlterado depois de deletar
 }
 
 // Uso: {produtoEditando && <EditarProdutoModal produtoId={produtoEditando} onFechar={...} onAlterado={...} />}
-export default function EditarProdutoModal({ produtoId, onFechar, onAlterado }: EditarProdutoModalProps) {
+export default function EditarProdutoModal({ produtoId, onFechar, onAlterado, onDeletado }: EditarProdutoModalProps) {
   const [produto, setProduto] = useState<ProdutoDetalhe | null>(null);
   const [erro, setErro] = useState("");
   // Se uma foto falhar e o usuário tentar de novo, as fotos que já foram não são enviadas outra vez
@@ -90,6 +91,10 @@ export default function EditarProdutoModal({ produtoId, onFechar, onAlterado }: 
       onDeletar={async () => {
         // O banco apaga os registros das fotos junto com o produto (onDelete: Cascade no schema)
         await deletarProduto(produtoId);
+        if (onDeletado) {
+          onFechar();
+          return onDeletado();
+        }
         salvouAlgo.current = true;
         fechar();
       }}

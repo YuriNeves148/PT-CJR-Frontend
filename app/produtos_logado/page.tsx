@@ -1,12 +1,80 @@
-"use client";
 import Image from "next/image";
 import Link from "next/link";
-export default function ProdutosLogado() {
+import { notFound } from "next/navigation";
+import ListaReviews from "@/app/components/avaliacoes/ListaReviews";
+import ProdutoCard from "@/app/components/loja/ProdutoCard";
+import EditarProduto from "@/app/components/produto/EditarProduto";
+import GaleriaProduto from "@/app/components/produto/GaleriaProduto";
+import {
+  avaliacoesValidas,
+  buscarAvaliacoesProduto,
+  buscarCategoria,
+  buscarLoja,
+  buscarProduto,
+  getUsuarioSessao,
+  imagensDoProduto,
+  mapearProduto,
+  mapearReview,
+  mediaAvaliacoes,
+} from "@/app/lib/backend";
+
+type ProdutoPageProps = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+function textoEstoque(estoque: number) {
+  if (estoque <= 0) return "indisponível";
+  return estoque === 1 ? "1 disponível" : `${estoque} disponíveis`;
+}
+
+function textoReviews(media: number | null, total: number) {
+  if (media === null) return "Sem avaliações";
+  return `${media.toFixed(1)} | ${total} ${total === 1 ? "review" : "reviews"}`;
+}
+
+// Página do produto: /produtos_logado?id=1
+export default async function ProdutosLogado({ searchParams }: ProdutoPageProps) {
+  const { id } = await searchParams;
+  if (typeof id !== "string") notFound();
+
+  const [consulta, sessao] = await Promise.all([buscarProduto(id), getUsuarioSessao()]);
+
+  if (consulta.status === "nao-encontrado") notFound();
+
+  if (consulta.status === "erro") {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f7f4e8] px-6 text-center">
+        <p role="alert" className="text-[#171917]">
+          Não foi possível carregar o produto agora. Tente novamente em instantes.
+        </p>
+      </main>
+    );
+  }
+
+  const produto = consulta.dados;
+  const [consultaLoja, consultaCategoria, consultaAvaliacoes] = await Promise.all([
+    buscarLoja(String(produto.loja_id)),
+    buscarCategoria(produto.categoria_id),
+    buscarAvaliacoesProduto(produto.id),
+  ]);
+
+  // Se alguma destas falhar, o produto continua aparecendo.
+  const loja = consultaLoja.status === "ok" ? consultaLoja.dados : null;
+  const categoria = consultaCategoria.status === "ok" ? consultaCategoria.dados.nome : null;
+  const avaliacoes =
+    consultaAvaliacoes.status === "ok" ? avaliacoesValidas(consultaAvaliacoes.dados) : null;
+
+  // O backend também confere o dono em toda edição.
+  const ehDono = sessao !== null && sessao.id === loja?.usuario.id;
+  const outrosProdutos = (loja?.produtos ?? [])
+    .filter((outro) => outro.id !== produto.id)
+    .map(mapearProduto);
+
   return (
-    <main className="min-h-screen bg-[#f7f4e8]">
+    <main className="min-h-screen overflow-x-hidden bg-[#f7f4e8]">
       {/* primeira parte */}
-      <div className="flex flex-row ml-40 mr-40 mt-20 gap-7 shrink-0">
-        <Link href="/">
+      <div className="mx-6 mt-20 flex flex-col gap-7 lg:mx-20 lg:flex-row 2xl:mx-40">
+        <Link href={sessao ? "/feed_logado" : "/feed_deslogado"} aria-label="Voltar para o feed" className="h-12 w-8 shrink-0">
           <Image
             src="/seta_voltar.png"
             alt="seta"
@@ -15,114 +83,79 @@ export default function ProdutosLogado() {
             className="w-8 h-12 hover:p-1 duration-200"
           />
         </Link>
-        {/* imagens do produto */}
-        <div className="flex flex-col gap-2 overflow-y-auto h-160 shrink-0">
-          <Image
-            src="/img_feed/adicione_imagem.png"
-            alt=""
-            width={173}
-            height={173}
-            className="rounded-4xl p-1"
-          />
-          <Image
-            src="/img_feed/adicione_imagem.png"
-            alt=""
-            width={173}
-            height={173}
-            className="rounded-4xl p-1"
-          />
 
-          <Image
-            src="/img_feed/adicione_imagem.png"
-            alt=""
-            width={173}
-            height={173}
-            className="rounded-4xl p-1"
-          />
-          <Image
-            src="/img_feed/adicione_imagem.png"
-            alt=""
-            width={173}
-            height={173}
-            className="rounded-4xl p-1"
-          />
-        </div>
-        {/* imagem maior */}
-        <div className=" shrink-0">
-          <Image
-            src="/img_feed/adicione_imagem.png"
-            alt=""
-            width={600}
-            height={600}
-            className="rounded-4xl p-1"
-          />{" "}
-        </div>
+        {/* imagens do produto */}
+        <GaleriaProduto key={produto.id} nome={produto.nome} imagens={imagensDoProduto(produto)} />
+
         {/* descricao do produto */}
-        <div>
+        <div className="min-w-0 lg:flex-1">
           <div className="flex flex-row gap-5 mb-2">
-            <p className="text-black font-bold text-5xl">Brownie Meio Amargo</p>
-            <Image
-              src="/editar_produto.png"
-              alt=""
-              width={100}
-              height={100}
-              className="w-10 h-10"
-            />
+            <h1 className="min-w-0 break-words text-black font-bold text-5xl">{produto.nome}</h1>
+            {ehDono && <EditarProduto produtoId={produto.id} />}
           </div>
-          <div className="flex flex-row text-black shrink-0 text-wrap gap-8 text-xl pb-2">
-            <Image
-              src="/estrela.png"
-              alt=""
-              width={100}
-              height={100}
-              className="w-7 h-7 "
-            />
-            <p>4.5 | 15 reviews</p>
-            <p className="text-purple-800">categoria</p>
-            <p className="text-purple-800">X disponiveis</p>
+          <div className="flex flex-row flex-wrap items-center text-black gap-x-8 gap-y-2 text-xl pb-2">
+            <span className="flex items-center gap-3">
+              <Image
+                src="/estrela.png"
+                alt=""
+                width={100}
+                height={100}
+                className="w-7 h-7 "
+              />
+              <span>
+                {avaliacoes
+                  ? textoReviews(mediaAvaliacoes(avaliacoes), avaliacoes.length)
+                  : "Avaliações indisponíveis"}
+              </span>
+            </span>
+            {categoria && <p className="text-purple-800 capitalize">{categoria}</p>}
+            <p className={produto.estoque > 0 ? "text-purple-800" : "text-red-600"}>
+              {textoEstoque(produto.estoque)}
+            </p>
           </div>
-          <p className="text-black text-6xl pt-2 pb-8">R$ 4,70</p>
+          <p className="text-black text-6xl pt-2 pb-8">
+            {Number(produto.preco).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+          </p>
           <section className="text-wrap text-black ">
-            <h1 className="text-3xl pb-3 ">Descrição</h1>
-            <p className="w-160 text-lg whitespace-pre-line">
-              BROWNIE MEIO AMARGO 80g  Recheado com uma ganache de chocolate
-              meio amargo bem cremosa, esse brownie conquistou o coração de
-              muita gente! Ingredientes Achocolatado em pó, farinha de trigo
-              enriquecida com ferro e ácido fólico, chocolate meio amargo,
-              açúcar cristal, manteiga, água ,creme de leite, ovo em pó, glucose
-              em pó, emulsificante: lecitina de soja, conservantes: sorbato de
-              potássio, propionato de cálcio e conservante para doces (sal
-              refinado sem iodo, açúcar refinado, conservantes INS 202 e INS 211
-              e acidulante INS 330) e antioxidante: sal não iodado, amido de
-              milho, antioxidantes INS 321 e INS 319.  CONTÉM GLÚTEN. CONTÉM
-              LACTOSE. ALÉRGICOS: CONTÉM OVO E DERIVADOS DE LEITE, TRIGO E
-              SOJA. 
+            <h2 className="text-3xl pb-3 ">Descrição</h2>
+            {/* whitespace-pre-line mantém os parágrafos e as quebras de linha salvos no banco */}
+            <p className="max-w-160 break-words text-lg whitespace-pre-line">
+              {produto.descricao || "Este produto ainda não tem descrição."}
             </p>
           </section>
         </div>
       </div>
 
       {/* segunda parte */}
-      <div className="text-black ml-40 mr-40 mb-20">
+      <div className="mx-6 text-black lg:mx-20 2xl:mx-40">
         <p className="text-3xl pt-10 pb-4">Da mesma loja</p>
-        <div className="flex flex-row overflow-x-auto gap-10 ">
-          <div className="flex flex-row overflow-x-auto p-2 gap-8 w-500 text-2xl line-clamp-2 ">
-            <Link href={"/"} className="bg-white p-2 shadow-lg">
-              <Image
-                src="/img_feed/adicione_imagem.png"
-                alt=""
-                width={100}
-                height={100}
-                className="w-45 h-45 rounded-4xl mb-2 hover:p-1  duration-250"
-              />
-              <p className="pb-3 w-50 text-wrap">
-                akdmf nhhhh jjjj kkkk llll jnk
-              </p>
-              <p>R$ 4.25</p>
-              <p>disponivel</p>
-            </Link>
+        {outrosProdutos.length > 0 ? (
+          <div className="flex flex-row overflow-x-auto gap-8 p-2">
+            {outrosProdutos.map((outro) => (
+              <Link
+                key={outro.id}
+                href={`/produtos_logado?id=${outro.id}`}
+                className="w-[205px] shrink-0 rounded-[32px] shadow-lg transition-opacity hover:opacity-80"
+              >
+                <ProdutoCard produto={outro} />
+              </Link>
+            ))}
           </div>
-        </div>
+        ) : (
+          <p className="text-gray-600">
+            {loja ? "Esta loja não tem outros produtos." : "Não foi possível carregar os produtos da loja."}
+          </p>
+        )}
+      </div>
+
+      {/* reviews */}
+      <div className="mx-6 mt-10 mb-20 lg:mx-20 2xl:mx-40">
+        <ListaReviews
+          key={produto.id}
+          titulo="Reviews"
+          reviews={avaliacoes?.map(mapearReview) ?? null}
+          textoVazio="Este produto ainda não tem avaliações."
+        />
       </div>
     </main>
   );

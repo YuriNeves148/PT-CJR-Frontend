@@ -66,6 +66,42 @@ test('consulta /user/me pelo servidor com cookie e BACKEND_URL, sem expor o JWT'
   assert.equal(await backend({ env }).getUsuarioSessao(), null);
 });
 
+test('média ignora notas fora de 1 a 5 e não existe sem avaliações', () => {
+  const api = backend({ env });
+  const validas = api.avaliacoesValidas([{ nota: 4 }, { nota: 411 }, { nota: 3 }, { nota: 0 }]);
+  assert.equal(validas.length, 2);
+  assert.equal(api.mediaAvaliacoes(validas), 3.5);
+  assert.equal(api.mediaAvaliacoes([]), null);
+});
+
+test('produto traz todas as imagens seguras na ordem da loja', () => {
+  const imagens = backend({ env }).imagensDoProduto({ imagem: [
+    { ordem: 2, url_imagem: 'https://externo.example/x.png' }, { ordem: 1, url_imagem: '/uploads/b.webp' }, { ordem: 0, url_imagem: '/uploads/a.webp' },
+  ] });
+  assert.equal(imagens.join(), 'https://imagens.example/uploads/a.webp,https://imagens.example/uploads/b.webp');
+});
+
+test('reviews do usuário juntam lojas e produtos, da mais recente para a mais antiga', async () => {
+  const usuario = { id: 8, nome: 'Autora', foto_perfil_url: null };
+  const respostas = {
+    '/avaliacoes-loja?usuario_id=8': [{ id: 1, loja_id: 9, nota: 5, comentario: null, createdAt: '2026-01-01', usuario }],
+    '/avaliacoes-produtos?usuario_id=8': [
+      { id: 1, produto_id: 2, nota: 3, comentario: 'a\nb', createdAt: '2026-02-01', usuario },
+      { id: 7, produto_id: 2, nota: 411, comentario: 'x', createdAt: '2026-03-01', usuario },
+    ],
+    '/lojas/9': { nome: 'Loja X' }, '/produtos/2': { nome: 'Produto Y' },
+  };
+  const api = backend({ env, fetch: async (url) => {
+    const corpo = respostas[url.replace('http://interno.example:3101', '')];
+    return { ok: !!corpo, status: corpo ? 200 : 404, json: async () => corpo };
+  } });
+  const reviews = await api.buscarReviewsDoUsuario(8);
+  assert.equal(reviews.map((r) => `${r.chave}:${r.titulo}:${r.href}`).join(' '),
+    'produto-1:Produto Y:/produtos_logado?id=2 loja-1:Loja X:/loja/9');
+  assert.equal(reviews[0].comentario, 'a\nb');
+  assert.equal(await backend({ env, fetch: async () => { throw Error('fora do ar'); } }).buscarReviewsDoUsuario(8), null);
+});
+
 function perfil(sessao = null) {
   return carregar('app/perfil/page.tsx', { imports: {
     '@/app/lib/backend': { idValido: backend().idValido, getUsuarioSessao: async () => sessao },
