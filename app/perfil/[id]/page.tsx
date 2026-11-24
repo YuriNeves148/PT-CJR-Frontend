@@ -1,10 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import EditarPerfil from "@/app/components/perfil/EditarPerfil";
+import ListaReviews from "@/app/components/avaliacoes/ListaReviews";
 import CadastroLoja from "@/app/components/loja/CadastroLoja";
+import ProdutosPerfil from "@/app/components/perfil/ProdutosPerfil";
 import {
+  buscarLoja,
   buscarPerfil,
+  buscarReviewsDoUsuario,
   getUsuarioSessao,
+  mapearProduto,
   urlImagemSegura,
 } from "@/app/lib/backend";
 
@@ -39,6 +44,18 @@ export default async function PerfilPage({
   }
 
   const perfil = consulta.dados;
+
+  // Os produtos pertencem às lojas, então reúne os de todas as lojas do perfil.
+  const [consultasLojas, reviews] = await Promise.all([
+    Promise.all(perfil.lojas.map((loja) => buscarLoja(String(loja.id)))),
+    buscarReviewsDoUsuario(perfil.id),
+  ]);
+  const produtos = consultasLojas.flatMap((consultaLoja) =>
+    consultaLoja.status === "ok"
+      ? consultaLoja.dados.produtos.map(mapearProduto)
+      : [],
+  );
+
   const ehDono = sessao?.id === perfil.id;
   const fotoPerfil = urlImagemSegura(perfil.foto_perfil_url);
   const usernamePublico = perfil.username && /^[A-Za-z0-9_.-]+$/.test(perfil.username)
@@ -79,6 +96,7 @@ export default async function PerfilPage({
 
           {ehDono && sessao && (
             <EditarPerfil
+              id={perfil.id}
               nome={perfil.nome}
               username={sessao.username ?? ""}
               email={sessao.email ?? ""}
@@ -88,10 +106,7 @@ export default async function PerfilPage({
         </div>
 
         <div className="mt-16">
-          <h2 className="text-2xl font-bold text-[#171917]">Produtos</h2>
-          <p className="mt-6 text-gray-600">
-            Nenhum produto para exibir.
-          </p>
+          <ProdutosPerfil produtos={produtos} />
 
           <div className="mt-10 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-2xl font-bold text-[#171917]">Lojas</h2>
@@ -169,10 +184,11 @@ export default async function PerfilPage({
         </div>
 
         <section className="mt-16">
-          <h2 className="text-2xl font-bold text-[#171917]">Avaliações</h2>
-          <p className="mt-6 text-gray-600">
-            Nenhuma avaliação para exibir.
-          </p>
+          <ListaReviews
+            titulo="Avaliações"
+            reviews={reviews}
+            textoVazio="Nenhuma avaliação para exibir."
+          />
         </section>
       </section>
     </main>

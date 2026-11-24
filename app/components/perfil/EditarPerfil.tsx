@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type RefObject } from "react";
 import { useRouter } from "next/navigation";
 import { mensagemDeErro } from "@/app/components/loja/enviarImagemLoja";
 
 type DadosPerfil = {
+  id: number;
   nome: string;
   username: string;
   email: string;
@@ -25,6 +26,10 @@ export default function EditarPerfil(dados: DadosPerfil) {
   const [preview, setPreview] = useState<string | null>(null);
   const [fotoAtualizada, setFotoAtualizada] = useState<string | null>(null);
   const previewRef = useRef<string | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
+  const [aviso, setAviso] = useState("");
+  const dialogSenhaRef = useRef<HTMLDialogElement>(null);
+  const ocupado = salvando || excluindo;
 
   useEffect(() => () => {
     if (previewRef.current) URL.revokeObjectURL(previewRef.current);
@@ -48,13 +53,15 @@ export default function EditarPerfil(dados: DadosPerfil) {
     setUsername(dados.username);
     setEmail(dados.email);
     setErro("");
+    setAviso("");
     dialogRef.current?.showModal();
   }
 
   async function salvar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    if (salvando) return;
+    if (ocupado) return;
     setErro("");
+    setAviso("");
     setSalvando(true);
 
     let camposSalvos = false;
@@ -90,7 +97,31 @@ export default function EditarPerfil(dados: DadosPerfil) {
     }
   }
 
-  const estiloCampo = "bg-white w-full rounded-2xl text-xl p-2 pl-5";
+  async function deletarConta() {
+    if (ocupado) return;
+    if (!confirm("Tem certeza que deseja excluir sua conta? Essa ação não pode ser desfeita.")) return;
+    setErro("");
+    setAviso("");
+    setExcluindo(true);
+
+    try {
+      const resposta = await fetch(`/api/user/${dados.id}`, { method: "DELETE" });
+      if (!resposta.ok) {
+        const resultado = await resposta.json().catch(() => null);
+        throw new Error(resultado?.mensagem ?? "Não foi possível excluir a conta.");
+      }
+      // A conta não existe mais: apaga o cookie da sessão antes de sair.
+      await fetch("/api/logout", { method: "POST" }).catch(() => undefined);
+      router.push("/login");
+      router.refresh();
+    } catch (falha) {
+      setErro(falha instanceof Error ? falha.message : "Falha de conexão ao excluir a conta.");
+      setExcluindo(false);
+    }
+  }
+
+  const estiloCampo = "bg-white w-100 max-w-full self-center rounded-2xl text-2xl p-2 pl-5";
+  const estiloBotao = "cursor-pointer hover:opacity-70 text-2xl w-100 max-w-full shadow-2xl rounded-full p-3 disabled:opacity-50";
 
   return (
     <>
@@ -102,38 +133,174 @@ export default function EditarPerfil(dados: DadosPerfil) {
         Editar Perfil
       </button>
 
+      {/* Pop-up perfil. O espaçamento fica na div interna: assim, só um clique
+          no fundo escuro tem o próprio dialog como alvo. */}
       <dialog
         ref={dialogRef}
-        aria-labelledby="titulo-editar-perfil"
-        onCancel={(evento) => { if (salvando) evento.preventDefault(); }}
-        className="m-auto max-h-[90dvh] w-[min(45rem,calc(100%-2rem))] overflow-y-auto rounded-4xl bg-[#EDEDED] p-6 text-black backdrop:bg-black/60"
+        aria-label="Editar perfil"
+        onCancel={(evento) => { if (ocupado) evento.preventDefault(); }}
+        onClose={() => selecionarFoto(null)}
+        onClick={(evento) => {
+          if (evento.target === evento.currentTarget && !ocupado) dialogRef.current?.close();
+        }}
+        className="m-auto max-h-[95dvh] w-180 max-w-[calc(100%-2rem)] overflow-y-auto rounded-4xl bg-[#EDEDED] text-black backdrop:bg-black/60"
       >
-        <button type="button" disabled={salvando} onClick={() => dialogRef.current?.close()} className="ml-auto block cursor-pointer" aria-label="Fechar edição">
-          <Image src="/img_esq_senha/x_fechar.png" alt="" width={32} height={32} />
-        </button>
-        <h2 id="titulo-editar-perfil" className="mb-6 text-center text-2xl font-bold">Editar perfil</h2>
-        <FotoPerfil fotoUrl={preview ?? fotoAtualizada ?? dados.fotoUrl} nome={dados.nome} aoSelecionar={selecionarFoto} selecionada={!!foto} desabilitado={salvando} />
+        <div className="flex min-h-225 flex-col p-6">
+          <button type="button" disabled={ocupado} onClick={() => dialogRef.current?.close()} className="mt-10 ml-auto block h-8 w-8 cursor-pointer duration-200 hover:scale-110" aria-label="Fechar edição">
+            <Image src="/img_esq_senha/x_fechar.png" alt="" width={32} height={32} className="h-8 w-8" />
+          </button>
 
-        <form onSubmit={salvar} className="mx-auto flex w-full max-w-100 flex-col gap-4">
-          <fieldset disabled={salvando} className="flex flex-col gap-4">
-            <label>Nome
-              <input name="nome" value={nome} onChange={(e) => setNome(e.target.value)} required maxLength={255} className={estiloCampo} />
-            </label>
-            <label>Username
-              <input name="username" value={username} onChange={(e) => setUsername(e.target.value)} required maxLength={255} className={estiloCampo} />
-            </label>
-            <p className="text-sm text-gray-600">Usernames com formato de e-mail não são exibidos publicamente.</p>
-            <label>E-mail
-              <input name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required maxLength={255} className={estiloCampo} />
-            </label>
-            {erro && <p role="alert" className="text-sm text-red-700">{erro}</p>}
-            <button type="submit" className="mt-6 cursor-pointer rounded-full bg-[#6A38F3] p-3 text-2xl text-white shadow-2xl hover:opacity-70 disabled:opacity-50">
-              {salvando ? "Salvando..." : "Salvar"}
+          <FotoPerfil fotoUrl={preview ?? fotoAtualizada ?? dados.fotoUrl} nome={dados.nome} aoSelecionar={selecionarFoto} selecionada={!!foto} desabilitado={ocupado} />
+
+          <form onSubmit={salvar}>
+            <fieldset disabled={ocupado} className="flex min-w-0 flex-col">
+              <div className="flex flex-col gap-4">
+                <input name="nome" placeholder="Nome" aria-label="Nome" value={nome} onChange={(e) => setNome(e.target.value)} required maxLength={255} className={estiloCampo} />
+                <input name="username" placeholder="Username" aria-label="Username" value={username} onChange={(e) => setUsername(e.target.value)} required maxLength={255} className={estiloCampo} />
+                <input name="email" type="email" placeholder="Email" aria-label="Email" value={email} onChange={(e) => setEmail(e.target.value)} required maxLength={255} className={estiloCampo} />
+              </div>
+
+              {erro && <p role="alert" className="mt-4 text-center text-red-700">{erro}</p>}
+              {aviso && <p role="status" className="mt-4 text-center text-green-700">{aviso}</p>}
+
+              <div className="mt-14 flex flex-col items-center gap-3">
+                <button type="button" onClick={deletarConta} className={`${estiloBotao} border-3 border-red-500 text-red-800`}>
+                  {excluindo ? "Excluindo..." : "Deletar Conta"}
+                </button>
+                <button type="button" onClick={() => { setErro(""); setAviso(""); dialogSenhaRef.current?.showModal(); }} className={`${estiloBotao} border-3 border-[#6A38F3] text-[#6A38F3]`}>
+                  Alterar senha
+                </button>
+                <button type="submit" className={`${estiloBotao} bg-[#6A38F3] text-white`}>
+                  {salvando ? "Salvando..." : "Salvar"}
+                </button>
+              </div>
+            </fieldset>
+          </form>
+        </div>
+      </dialog>
+
+      <AlterarSenha dialogRef={dialogSenhaRef} aoAlterar={() => setAviso("Senha alterada com sucesso!")} />
+    </>
+  );
+}
+
+// Pop-up de alterar senha. A senha antiga é conferida pelo backend.
+function AlterarSenha({ dialogRef, aoAlterar }: {
+  dialogRef: RefObject<HTMLDialogElement | null>;
+  aoAlterar: () => void;
+}) {
+  const [senhaAntiga, setSenhaAntiga] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
+  // Muda a cada fechamento para os campos voltarem com a senha escondida.
+  const [abertura, setAbertura] = useState(0);
+  const [erro, setErro] = useState("");
+  const [salvando, setSalvando] = useState(false);
+
+  function limparCampos() {
+    setSenhaAntiga("");
+    setNovaSenha("");
+    setConfirmarSenha("");
+    setErro("");
+    setAbertura((atual) => atual + 1);
+  }
+
+  async function salvarSenha(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    if (salvando) return;
+    if (novaSenha.length < 6) {
+      setErro("A nova senha deve ter no mínimo 6 caracteres.");
+      return;
+    }
+    if (novaSenha !== confirmarSenha) {
+      setErro("A confirmação não é igual à nova senha.");
+      return;
+    }
+    setErro("");
+    setSalvando(true);
+
+    try {
+      const resposta = await fetch("/api/perfil/senha", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ senhaAntiga, novaSenha }),
+      });
+      if (!resposta.ok) {
+        throw new Error(mensagemDeErro(await resposta.json().catch(() => null), "Não foi possível alterar a senha."));
+      }
+      dialogRef.current?.close();
+      aoAlterar();
+    } catch (falha) {
+      setErro(falha instanceof Error ? falha.message : "Falha de conexão ao alterar a senha.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <dialog
+      ref={dialogRef}
+      aria-label="Alterar senha"
+      onCancel={(evento) => { if (salvando) evento.preventDefault(); }}
+      onClose={limparCampos}
+      onClick={(evento) => {
+        if (evento.target === evento.currentTarget && !salvando) dialogRef.current?.close();
+      }}
+      className="m-auto max-h-[95dvh] w-180 max-w-[calc(100%-2rem)] overflow-y-auto rounded-4xl bg-[#EDEDED] text-black backdrop:bg-black/60"
+    >
+      <div className="flex min-h-200 flex-col p-6">
+        <button type="button" disabled={salvando} onClick={() => dialogRef.current?.close()} className="mt-20 mr-10 h-8 w-8 cursor-pointer self-end duration-200 hover:scale-110" aria-label="Fechar alteração de senha">
+          <Image src="/img_esq_senha/x_fechar.png" alt="" width={32} height={32} className="h-8 w-8" />
+        </button>
+        <Image src="/img_esq_senha/chave.png" alt="" width={152} height={152} className="mb-10 h-38 w-38 self-center" />
+
+        <form onSubmit={salvarSenha}>
+          <fieldset disabled={salvando} className="flex min-w-0 flex-col">
+            <div key={abertura} className="flex flex-col items-center gap-6">
+              <CampoSenha rotulo="Senha Antiga" valor={senhaAntiga} aoMudar={setSenhaAntiga} autoComplete="current-password" />
+              <CampoSenha rotulo="Nova Senha" valor={novaSenha} aoMudar={setNovaSenha} autoComplete="new-password" />
+              <CampoSenha rotulo="Confirmar Senha" valor={confirmarSenha} aoMudar={setConfirmarSenha} autoComplete="new-password" />
+            </div>
+
+            {erro && <p role="alert" className="mt-4 text-center text-red-700">{erro}</p>}
+
+            <button type="submit" className="m-5 mt-10 w-100 max-w-full cursor-pointer self-center rounded-2xl bg-[#6A38F3] p-3 text-2xl text-white hover:bg-[#8c77e6] disabled:opacity-50">
+              {salvando ? "Salvando..." : "Salvar Senha"}
             </button>
           </fieldset>
         </form>
-      </dialog>
-    </>
+      </div>
+    </dialog>
+  );
+}
+
+function CampoSenha({ rotulo, valor, aoMudar, autoComplete }: {
+  rotulo: string; valor: string;
+  aoMudar: (valor: string) => void; autoComplete: string;
+}) {
+  const [mostrar, setMostrar] = useState(false);
+  return (
+    <div className="relative w-100 max-w-full">
+      <input
+        placeholder={rotulo}
+        aria-label={rotulo}
+        type={mostrar ? "text" : "password"}
+        autoComplete={autoComplete}
+        required
+        value={valor}
+        onChange={(e) => aoMudar(e.target.value)}
+        className="w-full rounded-2xl bg-white p-2 pr-14 pl-5 text-2xl"
+      />
+      <button type="button" onClick={() => setMostrar(!mostrar)} className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer">
+        <Image
+          src="/images/iconamoon_eye-thin.png"
+          alt={mostrar ? "Ocultar senha" : "Mostrar senha"}
+          width={24}
+          height={24}
+          className={mostrar ? "opacity-100" : "opacity-50"}
+        />
+      </button>
+    </div>
   );
 }
 
@@ -145,26 +312,33 @@ function FotoPerfil({ fotoUrl, nome, aoSelecionar, selecionada, desabilitado }: 
   const inputRef = useRef<HTMLInputElement>(null);
   return (
     <div className="mb-8 flex flex-col items-center gap-3">
-      <div className="relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-full bg-gray-300">
-        {fotoUrl ? (
-          <Image src={fotoUrl} alt={`Foto de ${nome}`} width={400} height={400} unoptimized className="h-full w-full object-cover" />
-        ) : (
-          <span className="text-6xl text-gray-600">{nome.charAt(0).toUpperCase()}</span>
-        )}
-      </div>
-      <input ref={inputRef} type="file" accept=".png,image/png" disabled={desabilitado} className="sr-only"
-        aria-label="Selecionar foto PNG"
+      {/* O backend só aceita foto de perfil em PNG de até 2 MB. */}
+      <input ref={inputRef} type="file" accept=".png,image/png" disabled={desabilitado} className="hidden"
         onChange={(evento) => {
           const arquivo = evento.target.files?.[0];
           evento.target.value = "";
           if (arquivo) aoSelecionar(arquivo);
         }} />
-      <button type="button" disabled={desabilitado} onClick={() => inputRef.current?.click()}
-        className="cursor-pointer text-lg font-semibold text-[#6A38F3] hover:underline disabled:opacity-50">
-        {fotoUrl ? "Alterar foto" : "Adicionar foto"}
+      <button type="button" disabled={desabilitado} onClick={() => inputRef.current?.click()} aria-label="Alterar foto de perfil"
+        className="relative flex h-40 w-40 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-gray-300 duration-200 hover:opacity-80">
+        {fotoUrl ? (
+          <Image src={fotoUrl} alt={`Foto de ${nome}`} width={400} height={400} unoptimized className="h-full w-full object-cover" />
+        ) : (
+          <span className="text-6xl text-gray-600">{nome.charAt(0).toUpperCase()}</span>
+        )}
       </button>
-      {selecionada && <button type="button" disabled={desabilitado} onClick={() => aoSelecionar(null)} className="text-sm text-red-800 hover:underline">Cancelar seleção</button>}
-      <p className="text-center text-sm text-gray-600">PNG de até 2 MB. A prévia será salva ao clicar em Salvar.</p>
+      <div className="flex items-center gap-4">
+        <button type="button" disabled={desabilitado} onClick={() => inputRef.current?.click()}
+          className="cursor-pointer text-lg font-semibold text-[#6A38F3] hover:underline disabled:opacity-50">
+          {fotoUrl ? "Alterar foto" : "Adicionar foto"}
+        </button>
+        {selecionada && (
+          <button type="button" disabled={desabilitado} onClick={() => aoSelecionar(null)}
+            className="cursor-pointer text-lg font-semibold text-red-800 hover:underline">
+            Remover
+          </button>
+        )}
+      </div>
     </div>
   );
 }
