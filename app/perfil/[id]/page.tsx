@@ -97,8 +97,21 @@ export default async function PerfilPage({
             <h2 className="text-2xl font-bold text-[#171917]">Lojas</h2>
 
             {ehDono && (
-              <CadastroLoja className="cursor-pointer font-semibold text-[#7137f5] hover:underline disabled:cursor-not-allowed disabled:opacity-50">
-                Cadastrar loja
+              <CadastroLoja
+                aria-label="Cadastrar loja"
+                className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#6A38F3] text-white transition-colors hover:bg-[#5522D8] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#6A38F3] active:bg-[#481BB8] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <svg
+                  width="36"
+                  height="36"
+                  viewBox="0 0 32 32"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  aria-hidden="true"
+                >
+                  <path d="M16 4v24M4 16h24" />
+                </svg>
               </CadastroLoja>
             )}
           </div>

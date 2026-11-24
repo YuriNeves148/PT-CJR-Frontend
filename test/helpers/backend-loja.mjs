@@ -34,6 +34,7 @@ export async function criarBackendLoja() {
     logo_url: "/uploads/logo.png",
     banner_url: "/uploads/banner.png",
   };
+  const lojasCriadas = [];
   const server = createServer(async (req, res) => {
     const json = (status, dados) => {
       res.writeHead(status, { "Content-Type": "application/json" });
@@ -57,7 +58,10 @@ export async function criarBackendLoja() {
           ? json(200, { id: 202, nome: "Outro usuário" })
           : json(401, { message: "Sessão expirada" });
     if (req.url === "/user/101")
-      return json(200, { ...usuario, lojas: estado.excluida ? [] : [loja] });
+      return json(200, {
+        ...usuario,
+        lojas: [...(estado.excluida ? [] : [loja]), ...lojasCriadas],
+      });
     if (req.url === "/categorias")
       return json(
         estado.falharCategorias ? 502 : 200,
@@ -96,8 +100,17 @@ export async function criarBackendLoja() {
         estado.excluida = true;
         return json(200, { id: 82 });
       }
-      if (req.url === "/lojas")
-        return json(201, { id: 83, ...JSON.parse(body) });
+      if (req.url === "/lojas") {
+        const dados = JSON.parse(body);
+        const novaLoja = {
+          ...loja,
+          ...dados,
+          id: 83,
+          categoria: categorias.find(({ id }) => id === dados.categoria_id),
+        };
+        lojasCriadas.push(novaLoja);
+        return json(201, novaLoja);
+      }
       if (req.url.endsWith("/banner") && estado.falharBanner)
         return json(502, { message: "Banner indisponível para teste" });
       return json(200, loja);

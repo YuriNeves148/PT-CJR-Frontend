@@ -48,22 +48,23 @@ export default async function LojaPage({ params }: LojaPageProps) {
         logoUrl={urlImagemSegura(loja.logo_url)}
         proprietario={loja.usuario.nome}
         perfilHref={`/perfil/${loja.usuario.id}`}
+        acoes={
+          ehDono && (
+            <EditarLoja
+              loja={{
+                id: loja.id,
+                nome: loja.nome,
+                categoria_id: loja.categoria?.id ?? null,
+                imagens: {
+                  "foto-perfil": urlImagemSegura(loja.foto_perfil_url),
+                  logo: urlImagemSegura(loja.logo_url),
+                  banner: urlImagemSegura(loja.banner_url),
+                },
+              }}
+            />
+          )
+        }
       />
-
-      {ehDono && (
-        <EditarLoja
-          loja={{
-            id: loja.id,
-            nome: loja.nome,
-            categoria_id: loja.categoria?.id ?? null,
-            imagens: {
-              "foto-perfil": urlImagemSegura(loja.foto_perfil_url),
-              logo: urlImagemSegura(loja.logo_url),
-              banner: urlImagemSegura(loja.banner_url),
-            },
-          }}
-        />
-      )}
 
       <LojaAvaliacoes
         notaMedia={loja.media_avaliacoes}

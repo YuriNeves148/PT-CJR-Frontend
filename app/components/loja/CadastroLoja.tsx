@@ -30,6 +30,7 @@ type CadastroLojaProps = {
   // Conteúdo e estilo do botão que abre o modal
   children?: ReactNode;
   className?: string;
+  "aria-label"?: string;
 };
 
 const ORDEM_ENVIO: TipoImagemLoja[] = ["foto-perfil", "logo", "banner"];
@@ -40,6 +41,7 @@ const ORDEM_ENVIO: TipoImagemLoja[] = ["foto-perfil", "logo", "banner"];
 export default function CadastroLoja({
   children = "Adicionar loja",
   className = "cursor-pointer rounded-full bg-[#6A38F3] px-8 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50",
+  "aria-label": ariaLabel,
 }: CadastroLojaProps) {
   const router = useRouter();
   const [aberto, setAberto] = useState(false);
@@ -190,6 +192,9 @@ export default function CadastroLoja({
     <>
       <button
         type="button"
+        aria-label={ariaLabel}
+        aria-haspopup="dialog"
+        aria-expanded={aberto}
         disabled={carregando || !!erroCategorias || categorias.length === 0}
         onClick={() => setAberto(true)}
         className={className}
