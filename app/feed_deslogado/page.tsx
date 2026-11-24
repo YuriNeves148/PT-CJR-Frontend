@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState, ChangeEvent } from "react";
+import { CATEGORIAS_SISTEMA } from "@/app/lib/categoriasSistema";
 
 export default function Home() {
   const disponivel = false;
@@ -32,14 +32,23 @@ export default function Home() {
             placeholder="Procurar por..."
           ></input>
           <p className="text-black font-semibold text-3xl pt-10">Categorias</p>
-          <nav className=" overflow-hidden flex flex-block flex-row gap-15 pb-5 pt-10">
-            <Image
-              src="/img_feed/categorias/mercado.png"
-              alt="mercado"
-              width={100}
-              height={100}
-              className="w-30 h-30 shrink-0 object-cover"
-            />
+          <nav className="overflow-x-auto flex flex-row gap-15 pb-5 pt-10">
+            {CATEGORIAS_SISTEMA.map((categoria) => (
+              <Link
+                key={categoria.slug}
+                href={`/categoria/${categoria.slug}`}
+                className="bg-white pb-5 p-3 rounded-4xl shrink-0 flex flex-col items-center"
+              >
+                <Image
+                  src={categoria.imagem}
+                  alt=""
+                  width={100}
+                  height={100}
+                  className="w-30 h-30 shrink-0 object-cover rounded-2xl"
+                />
+                <p className="text-black text-xl">{categoria.nome}</p>
+              </Link>
+            ))}
           </nav>
 
           {/* INFO. DE PRODUTOS */}

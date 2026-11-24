@@ -44,7 +44,8 @@ export default function Navbar() {
       if (!resposta.ok) throw new Error("Falha ao encerrar sessão.");
       // Confirma que o navegador já não envia uma sessão válida.
       const sessao = await fetch("/api/me", { cache: "no-store" });
-      if (sessao.status !== 401) throw new Error("Não foi possível confirmar o logout.");
+      if (sessao.status !== 401)
+        throw new Error("Não foi possível confirmar o logout.");
       setUsuarioId(null);
       router.push("/feed_deslogado");
       router.refresh();
@@ -74,7 +75,7 @@ export default function Navbar() {
   return (
     <header className="relative flex w-full items-center justify-between bg-black px-6 py-4 text-white md:px-10">
       {/* Logo Stock.io */}
-      <Link href="/" aria-label="Página inicial Stock.io">
+      <Link href="/feed_logado" aria-label="Página inicial Stock.io">
         <Image
           src="/logo-stockio-branco.png"
           alt="Stock.io"
@@ -163,7 +164,10 @@ export default function Navbar() {
         )}
       </nav>
       {erroLogout && (
-        <p role="alert" className="absolute right-6 top-full z-50 max-w-xs rounded-lg bg-black p-3 text-sm text-white shadow-lg">
+        <p
+          role="alert"
+          className="absolute right-6 top-full z-50 max-w-xs rounded-lg bg-black p-3 text-sm text-white shadow-lg"
+        >
           {erroLogout}
         </p>
       )}

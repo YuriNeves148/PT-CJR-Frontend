@@ -3,6 +3,7 @@
 import { useEffect, useState, type SyntheticEvent } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { filtrarCategoriasSistema } from "@/app/lib/categoriasSistema";
 import {
   getCategorias,
   getProdutos,
@@ -66,12 +67,9 @@ export default function CategoriaPage() {
       .finally(() => setCarregando(false));
   }, []);
 
-  // Só as categorias principais viram botões; as subcategorias entram junto com a mãe
   const categoriasPrincipais = categorias.filter((c) => c.categoria_pai_id === null);
-  // Se duas categorias tiverem o mesmo nome, viram um botão só (as duas teriam o mesmo link)
-  const botoesCategorias = categoriasPrincipais.filter(
-    (c, i, todas) => todas.findIndex((outra) => slugify(outra.nome) === slugify(c.nome)) === i
-  );
+  // Só as categorias do sistema viram botões; as subcategorias entram junto com a mãe
+  const botoesCategorias = filtrarCategoriasSistema(categorias);
   // Todas as categorias principais com esse nome (normalmente só uma)
   const categoriasDoSlug = categoriasPrincipais.filter((c) => slugify(c.nome) === slug);
   const categoriaAtual = categoriasDoSlug[0];
@@ -158,7 +156,7 @@ export default function CategoriaPage() {
               <Link
                 key={c.id}
                 href={`/categoria/${slugify(c.nome)}`}
-                className={`w-[78px] rounded-full py-[5px] text-center text-[11px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6c3df0] ${
+                className={`min-w-[78px] rounded-full px-3 py-[5px] text-center text-[11px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6c3df0] ${
                   slugify(c.nome) === slug
                     ? "bg-[#6c3df0] text-white"
                     : "bg-white text-[#8b78d6]"

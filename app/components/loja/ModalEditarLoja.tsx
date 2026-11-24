@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { filtrarCategoriasSistema } from "@/app/lib/categoriasSistema";
 import { useRouter } from "next/navigation";
 import CampoArquivo, { IconeBanner, IconeUpload } from "./CampoArquivoLoja";
 import DialogoLoja from "./DialogoLoja";
@@ -23,7 +24,7 @@ export type LojaEditavel = DadosEdicaoLoja & {
   id: number;
   imagens: Record<TipoImagemLoja, string | null>;
 };
-type Categoria = { id: number; nome: string };
+type Categoria = { id: number; nome: string; categoria_pai_id?: number | null };
 const TITULOS: Record<TipoImagemLoja, string> = {
   "foto-perfil": "Anexe a foto de perfil de sua loja",
   logo: "Anexe a logo em SVG de sua loja",
@@ -100,6 +101,14 @@ export default function ModalEditarLoja({
     carregar();
     return () => controlador.abort();
   }, [consultaCategorias]);
+
+  // Só as categorias do sistema podem ser escolhidas. A atual continua na lista
+  // para a loja poder ser editada mesmo com uma categoria antiga.
+  const doSistema = filtrarCategoriasSistema(categorias);
+  const opcoesCategoria = categorias.filter(
+    (categoria) =>
+      categoria.id === referencia.categoria_id && !doSistema.includes(categoria),
+  ).concat(doSistema);
 
   const alterado =
     nome !== referencia.nome ||
@@ -246,7 +255,7 @@ export default function ModalEditarLoja({
                 }
                 className="h-[50px] w-full appearance-none rounded-full bg-white pl-6 pr-14 text-base outline-none focus:ring-2 focus:ring-[#6A38F3] disabled:opacity-60"
               >
-                {!categorias.some(
+                {!opcoesCategoria.some(
                   (categoria) => String(categoria.id) === categoriaId,
                 ) && (
                   <option value={categoriaId}>
@@ -255,7 +264,7 @@ export default function ModalEditarLoja({
                       : "Selecione uma categoria"}
                   </option>
                 )}
-                {categorias.map((categoria) => (
+                {opcoesCategoria.map((categoria) => (
                   <option key={categoria.id} value={categoria.id}>
                     {categoria.nome}
                   </option>

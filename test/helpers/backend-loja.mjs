@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 export async function criarBackendLoja() {
   const categorias = [
     { id: 7, nome: "Beleza" },
-    { id: 9, nome: "Alimentos" },
+    { id: 9, nome: "Mercado" },
   ];
   const usuario = {
     id: 101,

@@ -9,6 +9,7 @@ import { ACEITAR_IMAGEM } from "./enviarImagemLoja";
 export type CategoriaModal = {
   id: number;
   nome: string;
+  categoria_pai_id?: number | null;
 };
 
 export type DadosNovaLoja = {

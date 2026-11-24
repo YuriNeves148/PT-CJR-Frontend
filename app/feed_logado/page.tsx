@@ -2,14 +2,16 @@
 import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { filtrarCategoriasSistema, imagemCategoria } from "@/app/lib/categoriasSistema";
 import { urlImagem } from "@/app/lib/urlImagem";
+import { slugify } from "@/app/service/produtoService";
 
 type Loja = {
   id: number;
   nome: string;
   descricao?: string | null;
   logo_url?: string | null;
-  categoria_pai: number | null;
+  categoria_id: number | null;
 };
 
 type Categoria = {
@@ -17,9 +19,6 @@ type Categoria = {
   nome: string;
   categoria_pai_id: number | null;
 };
-function gerarSlug(nome: string): string {
-  return nome.toLocaleLowerCase().normalize("NFD").trim();
-}
 
 type ImagemProduto = {
   id: number;
@@ -69,7 +68,9 @@ export default function Home() {
   }, []);
 
   /* para CATEGORIAS */
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  // Guarda todas (com subcategorias) para achar o nome e a categoria pai de cada loja.
+  const [todasCategorias, setTodasCategorias] = useState<Categoria[]>([]);
+  const categorias = filtrarCategoriasSistema(todasCategorias);
   const [carregandoCategorias, setCarregandoCategorias] = useState(true);
   const [erroCategorias, setErroCategorias] = useState("");
   useEffect(() => {
@@ -83,7 +84,7 @@ export default function Home() {
         }
 
         const dados: Categoria[] = await resposta.json();
-        setCategorias(dados.filter((c) => c.categoria_pai_id === null));
+        setTodasCategorias(dados);
       } catch {
         setErroCategorias("Erro de conexão com o servidor.");
       } finally {
@@ -93,6 +94,36 @@ export default function Home() {
 
     carregarCategorias();
   }, []);
+
+  /* para FILTRO DE LOJAS */
+  const [selecionadas, setSelecionadas] = useState<number[]>([]); // ids das categorias marcadas
+  const [verTodasLojas, setVerTodasLojas] = useState(false);
+
+  // Marca a categoria; se ela já estava marcada, desmarca.
+  function alternarCategoria(id: number) {
+    setSelecionadas((atuais) =>
+      atuais.includes(id)
+        ? atuais.filter((atual) => atual !== id)
+        : [...atuais, id],
+    );
+  }
+
+  function categoriaDaLoja(loja: Loja) {
+    return todasCategorias.find((c) => c.id === loja.categoria_id);
+  }
+
+  // Nada marcado: todas as lojas. Com marcadas: lojas de qualquer uma delas.
+  // Loja em subcategoria também aparece quando a categoria pai está marcada.
+  const lojasFiltradas = lojas.filter((loja) => {
+    if (selecionadas.length === 0) return true;
+    const categoria = categoriaDaLoja(loja);
+    if (!categoria) return false;
+    return (
+      selecionadas.includes(categoria.id) ||
+      (categoria.categoria_pai_id !== null &&
+        selecionadas.includes(categoria.categoria_pai_id))
+    );
+  });
 
   /* para PRODUTOS */
   const [produtos, setProdutos] = useState<Produtos[]>([]);
@@ -150,7 +181,7 @@ export default function Home() {
             placeholder="Procurar por..."
           ></input>
           <p className="text-black font-semibold text-3xl pt-10">Categorias</p>
-          <nav className="overflow-hidden flex flex-row gap-15 pb-5 pt-10">
+          <nav className="overflow-x-auto flex flex-row gap-15 pb-5 pt-10">
             {carregandoCategorias ? (
               <p className="text-black text-xl">Carregando categorias...</p>
             ) : erroCategorias ? (
@@ -163,16 +194,15 @@ export default function Home() {
               categorias.map((categoria) => (
                 <span
                   key={categoria.id}
-                  className="bg-white pb-5 p-3 rounded-4xl"
+                  className="bg-white pb-5 p-3 rounded-4xl shrink-0"
                 >
                   <Link
-                    key={categoria.id}
-                    href={`/categoria/${gerarSlug(categoria.nome)}`}
+                    href={`/categoria/${slugify(categoria.nome)}`}
                     className="flex flex-col items-center shrink-0"
                   >
                     <Image
-                      src="/img_feed/sem-imagem.png"
-                      alt={categoria.nome}
+                      src={imagemCategoria(categoria.nome)}
+                      alt=""
                       width={100}
                       height={100}
                       className="w-30 h-30 shrink-0 object-cover rounded-2xl"
@@ -250,66 +280,83 @@ export default function Home() {
 
           {/* INFO. DE LOJAS */}
           <div className="relative">
-            <details className="peer ">
-              <summary className="flex cursor-pointer  list-none items-end [&::-webkit-details-marker]:hidden">
-                <span className="text-black font-semibold text-3xl pt-10">
-                  Lojas
-                </span>
-                <details className="group relative  mt-4 w-fit ml-auto ">
-                  <summary className="flex w-120 cursor-pointer list-none items-center gap-2 rounded-2xl bg-white pl-6 py-2 text-2xl text-black [&::-webkit-details-marker]:hidden hover:bg-gray-100">
-                    filtros
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={5}
-                      className="h-4 w-4 transition-transform group-open:rotate-180"
-                      aria-hidden="true"
+            <div className="flex items-end">
+              <h2 className="text-black font-semibold text-3xl pt-10">Lojas</h2>
+              <details className="group relative mt-4 w-fit ml-auto">
+                <summary className="flex w-120 cursor-pointer list-none items-center gap-2 rounded-2xl bg-white pl-6 py-2 text-2xl text-black [&::-webkit-details-marker]:hidden hover:bg-gray-100">
+                  filtros
+                  {selecionadas.length > 0 && ` (${selecionadas.length})`}
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={5}
+                    className="h-4 w-4 transition-transform group-open:rotate-180"
+                    aria-hidden="true"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </summary>
+
+                {/* FILTROS */}
+                <div className="absolute top-full z-20 w-120 rounded-lg border border-gray-300 bg-white p-4 text-xl text-black shadow-lg">
+                  {carregandoCategorias ? (
+                    <p>Carregando categorias...</p>
+                  ) : erroCategorias ? (
+                    <p className="text-red-600">{erroCategorias}</p>
+                  ) : (
+                    categorias.map((categoria) => (
+                      <label
+                        key={categoria.id}
+                        className="flex cursor-pointer items-center gap-2 capitalize"
+                      >
+                        <input
+                          type="checkbox"
+                          name="categoria"
+                          checked={selecionadas.includes(categoria.id)}
+                          onChange={() => alternarCategoria(categoria.id)}
+                        />
+                        {categoria.nome}
+                      </label>
+                    ))
+                  )}
+                  {selecionadas.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSelecionadas([])}
+                      className="mt-2 cursor-pointer text-blue-600 hover:text-blue-900"
                     >
-                      <path d="m6 9 6 6 6-6" />
-                    </svg>
-                  </summary>
+                      Limpar filtros
+                    </button>
+                  )}
+                </div>
+              </details>
+              <button
+                type="button"
+                onClick={() => setVerTodasLojas(!verTodasLojas)}
+                aria-expanded={verTodasLojas}
+                className="ml-10 pr-10 cursor-pointer text-blue-600 text-lg hover:text-blue-900"
+              >
+                {verTodasLojas ? "ver menos" : "ver mais"}
+              </button>
+            </div>
 
-                  {/* FILTROS */}
-                  <div className="absolute top-full z-20 w-120 rounded-lg border border-gray-300 bg-white p-4 text-xl text-black shadow-lg">
-                    <div>
-                      {carregandoCategorias ? (
-                        <p className="text-black text-xl">
-                          Carregando categorias
-                        </p>
-                      ) : (
-                        categorias.map((categoria) => (
-                          <label
-                            key={categoria.id}
-                            className="flex items-center gap-2 text-transform: capitalize"
-                          >
-                            <input
-                              type="checkbox"
-                              name="categoria"
-                              value={categoria.nome}
-                            />
-                            {categoria.nome}
-                          </label>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </details>
-                <span className="ml-10 pr-10 text-blue-600 text-lg hover:text-blue-900">
-                  ver mais / menos
-                </span>
-              </summary>
-            </details>
-
-            <nav className="flex flex-nowrap shrink-0 items-center gap-11 overflow-hidden pb-40 pt-10 peer-open:flex-wrap">
+            {/* min-h reserva espaço para o menu de filtros aberto */}
+            <nav
+              className={`flex min-h-110 shrink-0 items-start gap-11 overflow-hidden pb-40 pt-10 ${verTodasLojas ? "flex-wrap" : "flex-nowrap"}`}
+            >
               {carregandoLojas ? (
                 <p className="text-black text-xl">Carregando lojas...</p>
               ) : erroLojas ? (
                 <p className="text-red-600 text-xl">{erroLojas}</p>
               ) : lojas.length === 0 ? (
                 <p className="text-black text-xl">Nenhuma loja cadastrada.</p>
+              ) : lojasFiltradas.length === 0 ? (
+                <p className="text-black text-xl">
+                  Nenhuma loja nas categorias selecionadas.
+                </p>
               ) : (
-                lojas.map((loja) => (
+                lojasFiltradas.map((loja) => (
                   <span
                     key={loja.id}
                     className="shrink-0 p-5 max-w-48 flex flex-col items-center"
@@ -326,6 +373,9 @@ export default function Home() {
                     <div className="flex flex-col items-center pt-5">
                       <p className="text-black text-2xl font-bold text-center line-clamp-2 break-words">
                         {loja.nome}
+                      </p>
+                      <p className="text-blue-800 text-xl text-center capitalize truncate max-w-full">
+                        {categoriaDaLoja(loja)?.nome ?? "Sem categoria"}
                       </p>
                     </div>
                   </span>

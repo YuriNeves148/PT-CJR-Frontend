@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { filtrarCategoriasSistema } from "@/app/lib/categoriasSistema";
 
 import ModalAdicionarLoja, {
   type CategoriaModal,
@@ -78,7 +79,7 @@ export default function CadastroLoja({
         );
 
         if (!controlador.signal.aborted) {
-          setCategorias(categoriasValidas);
+          setCategorias(filtrarCategoriasSistema(categoriasValidas));
         }
       } catch (erro) {
         if (!controlador.signal.aborted) {
