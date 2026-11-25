@@ -14,11 +14,20 @@ interface EditarAvaliacaoModalProps {
   lojaNome: string; // a página da loja já tem o nome; aparece em "Você está avaliando <loja>"
   onFechar: () => void;
   onAlterado: () => void; // chamado depois de salvar ou deletar, ex: para recarregar a lista
+  // Se for passado, é chamado depois de deletar no lugar de onAlterado
+  // (ex: a página da própria avaliação precisa sair dela, e não recarregar)
+  onDeletado?: () => void;
 }
 
 // Uso: {avaliacaoEditando && <EditarAvaliacaoModal avaliacaoId={avaliacaoEditando} lojaNome={...} onFechar={...} onAlterado={...} />}
 // Só o autor consegue salvar ou deletar: para outra pessoa o backend responde 403 e o modal mostra o erro.
-export default function EditarAvaliacaoModal({ avaliacaoId, lojaNome, onFechar, onAlterado }: EditarAvaliacaoModalProps) {
+export default function EditarAvaliacaoModal({
+  avaliacaoId,
+  lojaNome,
+  onFechar,
+  onAlterado,
+  onDeletado,
+}: EditarAvaliacaoModalProps) {
   const [avaliacao, setAvaliacao] = useState<AvaliacaoLojaDetalhe | null>(null);
   const [erro, setErro] = useState("");
 
@@ -46,8 +55,9 @@ export default function EditarAvaliacaoModal({ avaliacaoId, lojaNome, onFechar, 
       onDeletar={async () => {
         // Os comentários feitos nessa avaliação são apagados junto (onDelete: Cascade no schema)
         await deletarAvaliacaoLoja(avaliacaoId);
-        onAlterado();
         onFechar();
+        if (onDeletado) onDeletado();
+        else onAlterado();
       }}
       onFechar={onFechar}
     />

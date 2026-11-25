@@ -20,16 +20,19 @@ export default function EditarLoja({ loja }: { loja: LojaEditavel }) {
         }}
         className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[#6A38F3] text-white transition-colors hover:bg-[#5522D8] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#6A38F3] active:bg-[#481BB8]"
       >
+        {/* Lápis (Figma): o "+" ao lado é o botão de avaliar a loja */}
         <svg
-          width="36"
-          height="36"
-          viewBox="0 0 32 32"
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
           aria-hidden="true"
         >
-          <path d="M16 4v24M4 16h24" />
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
         </svg>
       </button>
       <p
