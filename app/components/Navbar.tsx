@@ -62,6 +62,8 @@ export default function Navbar() {
   // Estilo compartilhado dos ícones
   const estiloIcone =
     "block h-6 w-6 bg-white transition-colors duration-300 group-hover:bg-[#C6E700]";
+    const estiloIconeAtivo =
+    "block h-6 w-6 bg-[#C6E700] transition-colors duration-300";
 
   // Aplica os SVGs originais como máscaras
   const estiloMascara = (arquivo: string) => ({
@@ -103,15 +105,11 @@ export default function Navbar() {
           />
         </Link>
 
-        {/* Loja - Entrega 3 */}
-        <Link
-          href="/teste_nav/telas_provisorias"
-          aria-label="Loja"
-          className="group block"
-        >
+        {/* Loja - listagem de lojas */}
+        <Link href="/lojas" aria-label="Loja" className="group block">
           <span
             aria-hidden="true"
-            className={estiloIcone}
+            className={pathname === "/lojas" ? estiloIconeAtivo : estiloIcone}
             style={estiloMascara("store.svg")}
           />
         </Link>
