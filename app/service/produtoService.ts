@@ -28,10 +28,35 @@ export interface Categoria {
 export interface Produto {
   id: number;
   categoriaId: number;
+  lojaId: number;
   nome: string;
   preco: number;
   imagem: string;
   disponivel: boolean;
+}
+
+// Formato que o backend devolve para GET /lojas (listagem pública, sem produtos/avaliações)
+interface LojaApi {
+  id: number;
+  nome: string;
+  logo_url: string | null;
+  sticker_url: string | null;
+}
+
+export interface Loja {
+  id: number;
+  nome: string;
+  logoUrl: string | null;
+}
+
+// GET /lojas é público (listagem geral de lojas, diferente de /lojas/me)
+export async function getLojas(): Promise<Loja[]> {
+  const response = await api.get<LojaApi[]>('/lojas');
+  return response.data.map((l) => ({
+    id: l.id,
+    nome: l.nome,
+    logoUrl: l.logo_url ? urlImagem(l.logo_url) : l.sticker_url ? urlImagem(l.sticker_url) : null,
+  }));
 }
 
 // "Acessórios" -> "acessorios", usado na URL /categoria/[slug]
@@ -56,6 +81,7 @@ export async function getProdutos(): Promise<Produto[]> {
     return {
       id: p.id,
       categoriaId: p.categoria_id,
+      lojaId: p.loja_id,
       nome: p.nome,
       preco: Number(p.preco),
       imagem: primeiraImagem ? urlImagem(primeiraImagem.url_imagem) : '/logo-stockio.png',
