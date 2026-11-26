@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Poppins } from "next/font/google";
 import ProdutoCard, {
     type ProdutoLoja,
@@ -89,12 +90,13 @@ export default function LojaProdutos({
               "
                         >
                             {melhoresAvaliados.map((produto) => (
-                                <div
+                                <Link
                                     key={produto.id}
-                                    className="w-[205px] shrink-0 snap-start"
+                                    href={`/produtos_logado?id=${produto.id}`}
+                                    className="w-[205px] shrink-0 snap-start transition-opacity hover:opacity-80"
                                 >
                                     <ProdutoCard produto={produto} />
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     ) : (
@@ -130,10 +132,13 @@ export default function LojaProdutos({
               "
                         >
                             {produtosVisiveis.map((produto) => (
-                                <ProdutoCard
+                                <Link
                                     key={produto.id}
-                                    produto={produto}
-                                />
+                                    href={`/produtos_logado?id=${produto.id}`}
+                                    className="block transition-opacity hover:opacity-80"
+                                >
+                                    <ProdutoCard produto={produto} />
+                                </Link>
                             ))}
                         </div>
                     ) : (

@@ -65,9 +65,11 @@ export async function DELETE(
     });
 
     if (!resposta.ok) {
+      // Repassa o status e a mensagem reais do backend (403, 404, 401...).
+      const resultado = await resposta.json().catch(() => null);
       return NextResponse.json(
-        { mensagem: "Sessão inválida ou expirada." },
-        { status: 401 },
+        { message: resultado?.message ?? "Não foi possível excluir a conta." },
+        { status: resposta.status },
       );
     }
 

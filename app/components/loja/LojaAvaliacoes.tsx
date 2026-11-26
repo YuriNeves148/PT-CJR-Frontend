@@ -19,9 +19,11 @@ type LojaAvaliacoesProps = {
 export function Estrelas({
   nota,
   tamanho = "text-3xl",
+  corVazia = "text-white",
 }: {
   nota: number;
   tamanho?: string;
+  corVazia?: string; // cor da estrela vazia (branca sobre fundo escuro, cinza sobre fundo claro)
 }) {
   // Garante que a nota fique entre 0 e 5
   const notaValida = Math.max(0, Math.min(5, nota));
@@ -44,7 +46,7 @@ export function Estrelas({
             aria-hidden="true"
           >
             {/* Estrela vazia */}
-            <span className="text-white">★</span>
+            <span className={corVazia}>★</span>
 
             {/* Parte amarela */}
             <span

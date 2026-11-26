@@ -84,18 +84,10 @@ export async function POST(request: Request) {
   }
 }
 
-// Lojas do usuário logado
+// Todas as lojas (lista pública, usada no feed logado e deslogado)
 export async function GET() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("session")?.value;
-
-  if (!token) {
-    return NextResponse.json({ mensagem: "Não autenticado." }, { status: 401 });
-  }
-
   try {
-    const resposta = await fetch(`${BACKEND_URL}/lojas/me`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const resposta = await fetch(`${BACKEND_URL}/lojas`, {
       cache: "no-store",
     });
 

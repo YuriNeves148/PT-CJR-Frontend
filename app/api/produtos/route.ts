@@ -1,18 +1,10 @@
 import { BACKEND_URL } from "@/app/lib/backend";
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 
+// Todos os produtos (lista pública, usada no feed logado e deslogado)
 export async function GET() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("session")?.value;
-
-  if (!token) {
-    return NextResponse.json({ mensagem: "Não autenticado." }, { status: 401 });
-  }
-
   try {
-    const resposta = await fetch(`${BACKEND_URL}/produtos/me`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const resposta = await fetch(`${BACKEND_URL}/produtos`, {
       cache: "no-store",
     });
 

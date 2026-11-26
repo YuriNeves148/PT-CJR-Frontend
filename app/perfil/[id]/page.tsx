@@ -2,9 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import EditarPerfil from "@/app/components/perfil/EditarPerfil";
 import CadastroLoja from "@/app/components/loja/CadastroLoja";
+import ProdutosPerfil from "@/app/components/perfil/ProdutosPerfil";
+import { LOGO_LOJA_PADRAO } from "@/app/components/loja/SeloLoja";
 import {
+  buscarLoja,
   buscarPerfil,
   getUsuarioSessao,
+  mapearProduto,
   urlImagemSegura,
 } from "@/app/lib/backend";
 
@@ -39,6 +43,23 @@ export default async function PerfilPage({
   }
 
   const perfil = consulta.dados;
+
+  // Os produtos pertencem às lojas: busca as lojas do perfil ao mesmo tempo
+  // e junta os produtos de todas elas numa lista só.
+  const consultasLojas = await Promise.all(
+    perfil.lojas.map((loja) => buscarLoja(String(loja.id))),
+  );
+  const produtos = consultasLojas.flatMap((consultaLoja) => {
+    if (consultaLoja.status !== "ok") return [];
+    const loja = consultaLoja.dados;
+    // Selo da loja no card: o logo dela ou, se não tiver, a imagem padrão de loja do projeto.
+    const selo = {
+      nome: loja.nome,
+      logoUrl: urlImagemSegura(loja.logo_url) ?? LOGO_LOJA_PADRAO,
+    };
+    return loja.produtos.map((produto) => ({ ...mapearProduto(produto), loja: selo }));
+  });
+
   const ehDono = sessao?.id === perfil.id;
   const fotoPerfil = urlImagemSegura(perfil.foto_perfil_url);
   const usernamePublico = perfil.username && /^[A-Za-z0-9_.-]+$/.test(perfil.username)
@@ -79,6 +100,7 @@ export default async function PerfilPage({
 
           {ehDono && sessao && (
             <EditarPerfil
+              id={perfil.id}
               nome={perfil.nome}
               username={sessao.username ?? ""}
               email={sessao.email ?? ""}
@@ -88,10 +110,14 @@ export default async function PerfilPage({
         </div>
 
         <div className="mt-16">
-          <h2 className="text-2xl font-bold text-[#171917]">Produtos</h2>
-          <p className="mt-6 text-gray-600">
-            Nenhum produto para exibir.
-          </p>
+          <ProdutosPerfil
+            produtos={produtos}
+            textoVazio={
+              ehDono
+                ? "Você ainda não possui produtos."
+                : "Este usuário ainda não possui produtos."
+            }
+          />
 
           <div className="mt-10 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-2xl font-bold text-[#171917]">Lojas</h2>
