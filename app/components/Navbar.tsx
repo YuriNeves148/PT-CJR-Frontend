@@ -90,9 +90,9 @@ export default function Navbar() {
         aria-label="Navegação principal"
         className="flex items-center gap-4 md:gap-8"
       >
-        {/* Sacola - Entrega 3 */}
+        {/* Sacola - catálogo de produtos */}
         <Link
-          href="/teste_nav/telas_provisorias"
+          href="/catalogo"
           aria-label="Sacola"
           className="group block"
         >

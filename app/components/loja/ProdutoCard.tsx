@@ -5,6 +5,8 @@ export type ProdutoLoja = {
   preco: number;
   estoque: number;
   imagemUrl?: string | null;
+  // Selo da loja vendedora (opcional: usado no catálogo geral, não faz sentido dentro da própria página da loja)
+  loja?: { nome: string; logoUrl?: string | null } | null;
 };
 
 type ProdutoCardProps = {
@@ -33,7 +35,7 @@ export default function ProdutoCard({
       "
     >
       {/* Imagem */}
-      <div className="flex h-[155px] w-full items-center justify-center overflow-hidden">
+      <div className="relative flex h-[155px] w-full items-center justify-center overflow-hidden">
         {produto.imagemUrl ? (
           <img
             src={produto.imagemUrl}
@@ -43,6 +45,26 @@ export default function ProdutoCard({
         ) : (
           <span className="text-center text-xs text-gray-400">
             Produto sem imagem
+          </span>
+        )}
+
+        {/* Selo da loja vendedora */}
+        {produto.loja && (
+          <span
+            title={produto.loja.nome}
+            className="absolute right-0 top-0 flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white bg-white shadow"
+          >
+            {produto.loja.logoUrl ? (
+              <img
+                src={produto.loja.logoUrl}
+                alt={produto.loja.nome}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="text-[10px] font-semibold text-[#6A38F3]">
+                {produto.loja.nome.slice(0, 2).toUpperCase()}
+              </span>
+            )}
           </span>
         )}
       </div>

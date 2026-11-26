@@ -55,6 +55,7 @@ export default function CategoriaPage() {
   const [erro, setErro] = useState(false);
   const [busca, setBusca] = useState("");
   const [ordem, setOrdem] = useState("");
+  const [paginaAtual, setPaginaAtual] = useState(1);
 
   useEffect(() => {
     Promise.all([getCategorias(), getProdutos()])
@@ -102,6 +103,28 @@ export default function CategoriaPage() {
     : ordem === "maior" ? filtrados.toSorted((a, b) => b.preco - a.preco)
     : ordem === "nome" ? filtrados.toSorted((a, b) => a.nome.localeCompare(b.nome))
     : filtrados;
+
+  // Paginação numerada (igual ao padrão já usado em LojaProdutos.tsx)
+  const PRODUTOS_POR_PAGINA = 15;
+  const totalPaginas = Math.max(1, Math.ceil(produtosExibidos.length / PRODUTOS_POR_PAGINA));
+  const paginaSegura = Math.min(paginaAtual, totalPaginas);
+  const inicioPagina = (paginaSegura - 1) * PRODUTOS_POR_PAGINA;
+  const produtosPaginados = produtosExibidos.slice(inicioPagina, inicioPagina + PRODUTOS_POR_PAGINA);
+
+  // Volta para a página 1 sempre que a categoria, a busca ou a ordenação mudam
+  // (ajuste de estado durante a renderização, sem useEffect, para não disparar
+  // o aviso react-hooks/set-state-in-effect)
+  const chaveFiltro = `${slug}|${busca}|${ordem}`;
+  const [chaveFiltroAnterior, setChaveFiltroAnterior] = useState(chaveFiltro);
+  if (chaveFiltro !== chaveFiltroAnterior) {
+    setChaveFiltroAnterior(chaveFiltro);
+    setPaginaAtual(1);
+  }
+
+  function mudarPagina(novaPagina: number) {
+    if (novaPagina < 1 || novaPagina > totalPaginas) return;
+    setPaginaAtual(novaPagina);
+  }
 
   return (
     <div className="min-h-screen bg-[#f5f2e1]">
@@ -197,7 +220,7 @@ export default function CategoriaPage() {
         </div>
 
         <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
-          {produtosExibidos.map((p) => (
+          {produtosPaginados.map((p) => (
             <article
               key={p.id}
               className="flex flex-col rounded-[28px] bg-white px-3 pb-3.5 pt-[18px]"
@@ -224,6 +247,47 @@ export default function CategoriaPage() {
             </article>
           ))}
         </div>
+
+        {!carregando && !erro && totalPaginas > 1 && (
+          <nav
+            aria-label="Paginação dos produtos"
+            className="mt-9 flex flex-wrap items-center justify-center gap-6"
+          >
+            <button
+              type="button"
+              onClick={() => mudarPagina(paginaSegura - 1)}
+              disabled={paginaSegura === 1}
+              aria-label="Página anterior"
+              className="cursor-pointer text-2xl text-[#6c3df0] disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              {"<"}
+            </button>
+
+            {Array.from({ length: totalPaginas }, (_, indice) => indice + 1).map((pagina) => (
+              <button
+                key={pagina}
+                type="button"
+                onClick={() => mudarPagina(pagina)}
+                aria-current={paginaSegura === pagina ? "page" : undefined}
+                className={`cursor-pointer text-lg text-[#6c3df0] ${
+                  paginaSegura === pagina ? "font-semibold" : "font-light"
+                }`}
+              >
+                {pagina}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => mudarPagina(paginaSegura + 1)}
+              disabled={paginaSegura === totalPaginas}
+              aria-label="Próxima página"
+              className="cursor-pointer text-2xl text-[#6c3df0] disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              {">"}
+            </button>
+          </nav>
+        )}
 
         {carregando && (
           <p className="mt-8 text-center text-[#8b78d6]">Carregando produtos...</p>
