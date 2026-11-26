@@ -3,6 +3,7 @@ import LojaHero from "@/app/components/loja/LojaHero";
 import LojaAvaliacoes from "@/app/components/loja/LojaAvaliacoes";
 import LojaProdutos from "@/app/components/loja/LojaProdutos";
 import EditarLoja from "@/app/components/loja/EditarLoja";
+import AdicionarAvaliacaoBotao from "@/app/components/loja/AdicionarAvaliacaoBotao";
 import {
   buscarLoja,
   getUsuarioSessao,
@@ -49,20 +50,27 @@ export default async function LojaPage({ params }: LojaPageProps) {
         proprietario={loja.usuario.nome}
         perfilHref={`/perfil/${loja.usuario.id}`}
         acoes={
-          ehDono && (
-            <EditarLoja
-              loja={{
-                id: loja.id,
-                nome: loja.nome,
-                categoria_id: loja.categoria?.id ?? null,
-                imagens: {
-                  "foto-perfil": urlImagemSegura(loja.foto_perfil_url),
-                  logo: urlImagemSegura(loja.logo_url),
-                  banner: urlImagemSegura(loja.banner_url),
-                },
-              }}
+          <div className="flex flex-col items-center gap-3">
+            {ehDono && (
+              <EditarLoja
+                loja={{
+                  id: loja.id,
+                  nome: loja.nome,
+                  categoria_id: loja.categoria?.id ?? null,
+                  imagens: {
+                    "foto-perfil": urlImagemSegura(loja.foto_perfil_url),
+                    logo: urlImagemSegura(loja.logo_url),
+                    banner: urlImagemSegura(loja.banner_url),
+                  },
+                }}
+              />
+            )}
+            <AdicionarAvaliacaoBotao
+              lojaId={loja.id}
+              lojaNome={loja.nome}
+              logado={sessao !== null}
             />
-          )
+          </div>
         }
       />
 

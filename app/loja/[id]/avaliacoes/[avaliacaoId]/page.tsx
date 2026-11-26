@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Estrelas } from "@/app/components/loja/LojaAvaliacoes";
 import AvatarUsuario from "@/app/components/loja/AvatarUsuario";
+import EditarAvaliacaoBotao from "@/app/components/loja/EditarAvaliacaoBotao";
 import ComentariosAvaliacao, {
   type ComentarioView,
 } from "@/app/components/loja/ComentariosAvaliacao";
@@ -95,7 +96,14 @@ export default async function ComentariosAvaliacaoPage({ params }: PageProps) {
               </span>
             </div>
 
-            <div className="ml-auto">
+            <div className="ml-auto flex flex-col items-end gap-2">
+              {usuario !== null && usuario.id === autor.id && (
+                <EditarAvaliacaoBotao
+                  avaliacaoId={avaliacao.dados.id}
+                  lojaId={loja.dados.id}
+                  lojaNome={loja.dados.nome}
+                />
+              )}
               <Estrelas nota={avaliacao.dados.nota} tamanho="text-2xl" />
             </div>
           </div>
