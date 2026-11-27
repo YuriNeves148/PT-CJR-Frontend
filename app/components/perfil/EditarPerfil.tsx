@@ -25,6 +25,9 @@ export default function EditarPerfil(dados: DadosPerfil) {
   const [preview, setPreview] = useState<string | null>(null);
   const [fotoAtualizada, setFotoAtualizada] = useState<string | null>(null);
   const previewRef = useRef<string | null>(null);
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
+  const ocupado = salvando || excluindo;
 
   useEffect(() => () => {
     if (previewRef.current) URL.revokeObjectURL(previewRef.current);
@@ -48,7 +51,26 @@ export default function EditarPerfil(dados: DadosPerfil) {
     setUsername(dados.username);
     setEmail(dados.email);
     setErro("");
+    setConfirmandoExclusao(false);
     dialogRef.current?.showModal();
+  }
+
+  async function excluirConta() {
+    if (excluindo) return;
+    setErro("");
+    setExcluindo(true);
+    try {
+      const resposta = await fetch("/api/perfil", { method: "DELETE" });
+      if (!resposta.ok) {
+        throw new Error(mensagemDeErro(await resposta.json().catch(() => null), "Não foi possível excluir a conta."));
+      }
+      dialogRef.current?.close();
+      router.push("/feed_deslogado");
+      router.refresh();
+    } catch (falha) {
+      setErro(falha instanceof Error ? falha.message : "Falha de conexão ao excluir a conta.");
+      setExcluindo(false);
+    }
   }
 
   async function salvar(evento: FormEvent<HTMLFormElement>) {
@@ -105,17 +127,17 @@ export default function EditarPerfil(dados: DadosPerfil) {
       <dialog
         ref={dialogRef}
         aria-labelledby="titulo-editar-perfil"
-        onCancel={(evento) => { if (salvando) evento.preventDefault(); }}
+        onCancel={(evento) => { if (ocupado) evento.preventDefault(); }}
         className="m-auto max-h-[90dvh] w-[min(45rem,calc(100%-2rem))] overflow-y-auto rounded-4xl bg-[#EDEDED] p-6 text-black backdrop:bg-black/60"
       >
-        <button type="button" disabled={salvando} onClick={() => dialogRef.current?.close()} className="ml-auto block cursor-pointer" aria-label="Fechar edição">
+        <button type="button" disabled={ocupado} onClick={() => dialogRef.current?.close()} className="ml-auto block cursor-pointer" aria-label="Fechar edição">
           <Image src="/img_esq_senha/x_fechar.png" alt="" width={32} height={32} />
         </button>
         <h2 id="titulo-editar-perfil" className="mb-6 text-center text-2xl font-bold">Editar perfil</h2>
-        <FotoPerfil fotoUrl={preview ?? fotoAtualizada ?? dados.fotoUrl} nome={dados.nome} aoSelecionar={selecionarFoto} selecionada={!!foto} desabilitado={salvando} />
+        <FotoPerfil fotoUrl={preview ?? fotoAtualizada ?? dados.fotoUrl} nome={dados.nome} aoSelecionar={selecionarFoto} selecionada={!!foto} desabilitado={ocupado} />
 
         <form onSubmit={salvar} className="mx-auto flex w-full max-w-100 flex-col gap-4">
-          <fieldset disabled={salvando} className="flex flex-col gap-4">
+          <fieldset disabled={ocupado} className="flex flex-col gap-4">
             <label>Nome
               <input name="nome" value={nome} onChange={(e) => setNome(e.target.value)} required maxLength={255} className={estiloCampo} />
             </label>
@@ -132,6 +154,29 @@ export default function EditarPerfil(dados: DadosPerfil) {
             </button>
           </fieldset>
         </form>
+
+        <div className="mx-auto mt-10 w-full max-w-100 border-t border-black/15 pt-6">
+          {confirmandoExclusao ? (
+            <div role="alertdialog" aria-labelledby="titulo-excluir-conta" aria-describedby="aviso-excluir-conta" className="rounded-3xl bg-white p-5 text-center">
+              <h3 id="titulo-excluir-conta" className="text-lg font-bold">Excluir sua conta?</h3>
+              <p id="aviso-excluir-conta" className="mt-2 text-sm text-gray-700">
+                Suas lojas, produtos, avaliações e comentários também serão apagados. Essa ação não pode ser desfeita.
+              </p>
+              <div className="mt-5 flex flex-wrap justify-center gap-3">
+                <button type="button" disabled={excluindo} onClick={() => setConfirmandoExclusao(false)} className="cursor-pointer rounded-full border border-black px-5 py-2 font-semibold hover:bg-black/5 disabled:opacity-50">
+                  Cancelar
+                </button>
+                <button type="button" disabled={excluindo} onClick={excluirConta} className="cursor-pointer rounded-full bg-[#F12D20] px-5 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50">
+                  {excluindo ? "Excluindo..." : "Excluir definitivamente"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" disabled={ocupado} onClick={() => setConfirmandoExclusao(true)} className="mx-auto block cursor-pointer text-sm font-semibold text-[#F12D20] hover:underline disabled:opacity-50">
+              Excluir conta
+            </button>
+          )}
+        </div>
       </dialog>
     </>
   );

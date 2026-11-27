@@ -2,9 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import EditarPerfil from "@/app/components/perfil/EditarPerfil";
 import CadastroLoja from "@/app/components/loja/CadastroLoja";
+import ProdutoCard from "@/app/components/loja/ProdutoCard";
+import { Estrelas } from "@/app/components/loja/LojaAvaliacoes";
 import {
+  buscarAvaliacoesDoUsuario,
+  buscarLoja,
   buscarPerfil,
   getUsuarioSessao,
+  mapearProduto,
   urlImagemSegura,
 } from "@/app/lib/backend";
 
@@ -39,6 +44,13 @@ export default async function PerfilPage({
   }
 
   const perfil = consulta.dados;
+  const [lojasCompletas, avaliacoes] = await Promise.all([
+    Promise.all(perfil.lojas.map((loja) => buscarLoja(String(loja.id)))),
+    buscarAvaliacoesDoUsuario(perfil.id),
+  ]);
+  const produtos = lojasCompletas.flatMap((loja) =>
+    loja.status === "ok" ? loja.dados.produtos.map(mapearProduto) : []
+  );
   const ehDono = sessao?.id === perfil.id;
   const fotoPerfil = urlImagemSegura(perfil.foto_perfil_url);
   const usernamePublico = perfil.username && /^[A-Za-z0-9_.-]+$/.test(perfil.username)
@@ -89,9 +101,17 @@ export default async function PerfilPage({
 
         <div className="mt-16">
           <h2 className="text-2xl font-bold text-[#171917]">Produtos</h2>
-          <p className="mt-6 text-gray-600">
-            Nenhum produto para exibir.
-          </p>
+          {produtos.length > 0 ? (
+            <div className="mt-6 flex snap-x gap-6 overflow-x-auto pb-4">
+              {produtos.map((produto) => (
+                <div key={produto.id} className="w-[205px] shrink-0 snap-start">
+                  <ProdutoCard produto={produto} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-6 text-gray-600">Nenhum produto para exibir.</p>
+          )}
 
           <div className="mt-10 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-2xl font-bold text-[#171917]">Lojas</h2>
@@ -183,9 +203,37 @@ export default async function PerfilPage({
 
         <section className="mt-16">
           <h2 className="text-2xl font-bold text-[#171917]">Avaliações</h2>
-          <p className="mt-6 text-gray-600">
-            Nenhuma avaliação para exibir.
-          </p>
+          {avaliacoes.status !== "ok" ? (
+            <p role="alert" className="mt-6 text-gray-600">
+              Não foi possível carregar as avaliações agora.
+            </p>
+          ) : avaliacoes.dados.length > 0 ? (
+            <ul className="mt-6 grid gap-5 lg:grid-cols-2">
+              {avaliacoes.dados.map((avaliacao) => (
+                <li key={avaliacao.chave}>
+                  <Link
+                    href={avaliacao.href}
+                    className="flex h-full flex-col gap-2 rounded-[28px] bg-[#202020] p-5 text-[#F8F5E9] transition-opacity hover:opacity-90"
+                  >
+                    <span className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="min-w-0">
+                        <span className="block text-xs uppercase tracking-wide text-[#C6E700]">
+                          {avaliacao.tipo === "loja" ? "Loja" : "Produto"}
+                        </span>
+                        <span className="block truncate text-lg font-semibold">{avaliacao.alvo}</span>
+                      </span>
+                      <Estrelas nota={avaliacao.nota} tamanho="text-xl" />
+                    </span>
+                    {avaliacao.comentario && (
+                      <span className="line-clamp-3 text-sm text-[#F8F5E9]/85">{avaliacao.comentario}</span>
+                    )}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-6 text-gray-600">Nenhuma avaliação para exibir.</p>
+          )}
         </section>
       </section>
     </main>

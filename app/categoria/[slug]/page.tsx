@@ -55,6 +55,7 @@ export default function CategoriaPage() {
   const [erro, setErro] = useState(false);
   const [busca, setBusca] = useState("");
   const [ordem, setOrdem] = useState("");
+  const [subcategoria, setSubcategoria] = useState<number | null>(null);
   const [paginaAtual, setPaginaAtual] = useState(1);
 
   useEffect(() => {
@@ -93,14 +94,17 @@ export default function CategoriaPage() {
     ...idsMae,
     ...categorias.filter((c) => c.categoria_pai_id !== null && idsMae.has(c.categoria_pai_id)).map((c) => c.id),
   ]);
+  const subcategorias = categorias.filter((c) => c.categoria_pai_id !== null && idsMae.has(c.categoria_pai_id));
   const filtrados = produtos.filter(
     (p) =>
-      idsDaCategoria.has(p.categoriaId) &&
+      (subcategoria === null ? idsDaCategoria.has(p.categoriaId) : p.categoriaId === subcategoria) &&
       p.nome.toLowerCase().includes(busca.toLowerCase())
   );
   const produtosExibidos =
     ordem === "menor" ? filtrados.toSorted((a, b) => a.preco - b.preco)
     : ordem === "maior" ? filtrados.toSorted((a, b) => b.preco - a.preco)
+    : ordem === "recentes" ? filtrados.toSorted((a, b) => b.criadoEm - a.criadoEm)
+    : ordem === "avaliados" ? filtrados.toSorted((a, b) => (b.media ?? -1) - (a.media ?? -1))
     : ordem === "nome" ? filtrados.toSorted((a, b) => a.nome.localeCompare(b.nome))
     : filtrados;
 
@@ -114,9 +118,10 @@ export default function CategoriaPage() {
   // Volta para a página 1 sempre que a categoria, a busca ou a ordenação mudam
   // (ajuste de estado durante a renderização, sem useEffect, para não disparar
   // o aviso react-hooks/set-state-in-effect)
-  const chaveFiltro = `${slug}|${busca}|${ordem}`;
+  const chaveFiltro = `${slug}|${busca}|${ordem}|${subcategoria}`;
   const [chaveFiltroAnterior, setChaveFiltroAnterior] = useState(chaveFiltro);
   if (chaveFiltro !== chaveFiltroAnterior) {
+    if (!chaveFiltro.startsWith(`${slug}|`)) setSubcategoria(null);
     setChaveFiltroAnterior(chaveFiltro);
     setPaginaAtual(1);
   }
@@ -202,6 +207,8 @@ export default function CategoriaPage() {
               <option value="">ordenar por</option>
               <option value="menor">Menor preço</option>
               <option value="maior">Maior preço</option>
+              <option value="recentes">Recém-adicionados</option>
+              <option value="avaliados">Melhor avaliados</option>
               <option value="nome">Nome (A-Z)</option>
             </select>
             <svg
@@ -219,11 +226,33 @@ export default function CategoriaPage() {
           </div>
         </div>
 
+        {subcategorias.length > 0 && (
+          <div role="group" aria-label="Filtrar por subcategoria" className="mb-5 flex flex-wrap items-center gap-2">
+            <span className="mr-1 text-sm font-medium text-neutral-700">Subcategorias:</span>
+            {[{ id: null, nome: "Todas" }, ...subcategorias].map((sub) => (
+              <button
+                key={sub.id ?? "todas"}
+                type="button"
+                aria-pressed={subcategoria === sub.id}
+                onClick={() => setSubcategoria(sub.id)}
+                className={`cursor-pointer rounded-full border px-4 py-1 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6c3df0] ${
+                  subcategoria === sub.id
+                    ? "border-[#6c3df0] bg-[#6c3df0] text-white"
+                    : "border-[#8b78d6] bg-transparent text-[#6c3df0] hover:bg-white"
+                }`}
+              >
+                {sub.nome}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
           {produtosPaginados.map((p) => (
-            <article
+            <Link
               key={p.id}
-              className="flex flex-col rounded-[28px] bg-white px-3 pb-3.5 pt-[18px]"
+              href={`/produto/${p.id}`}
+              className="flex flex-col rounded-[28px] bg-white px-3 pb-3.5 pt-[18px] transition-shadow hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6c3df0]"
             >
               <div className="mb-3.5 flex h-[110px] items-center justify-center">
                 <img
@@ -244,7 +273,7 @@ export default function CategoriaPage() {
               >
                 {p.disponivel ? "DISPONÍVEL" : "INDISPONÍVEL"}
               </span>
-            </article>
+            </Link>
           ))}
         </div>
 

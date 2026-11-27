@@ -3,11 +3,21 @@ import { createUser } from '../service/userService';
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Outfit } from "next/font/google";
 import Image from "next/image";
 import axios from "axios";
-
-const outfit = Outfit({ subsets: ["latin"], weight: ["300", "500", "800"] });
+import {
+  botaoOlho,
+  botaoPrincipal,
+  campo,
+  estiloCartao,
+  estiloPagina,
+  emailValido,
+  estiloInvalido,
+  estiloTitulo,
+  EyeIcon,
+  MensagemCampo,
+  outfit,
+} from "@/app/components/auth/elementosAuth";
 
 interface CadastroForm {
   nomeCompleto: string;
@@ -15,31 +25,6 @@ interface CadastroForm {
   email: string;
   senha: string;
   confirmarSenha: string;
-}
-
-const campo =
-  "block h-[52px] w-full rounded-full bg-[#f4f1e3] px-9 text-[1.3rem] font-light text-[#202020] " +
-  "placeholder:text-[#7a7a72] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#5e3dec]";
-
-const botaoOlho =
-  "absolute right-5 top-1/2 flex size-9 -translate-y-1/2 cursor-pointer items-center justify-center " +
-  "rounded-full text-[#7a7a72] focus-visible:outline-2 focus-visible:outline-[#5e3dec]";
-
-function EyeIcon({ aberto }: { aberto: boolean }) {
-  return (
-    <svg
-      className="size-[22px] shrink-0"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      aria-hidden="true"
-    >
-      <path d="M1.5 12s3.8-7 10.5-7 10.5 7 10.5 7-3.8 7-10.5 7S1.5 12 1.5 12Z" />
-      <circle cx="12" cy="12" r="3" />
-      {!aberto && <path d="M3 3l18 18" />}
-    </svg>
-  );
 }
 
 export default function Cadastro() {
@@ -54,18 +39,44 @@ export default function Cadastro() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
   const [erro, setErro] = useState("");
+  const [errosCampo, setErrosCampo] = useState<Partial<Record<keyof CadastroForm, string>>>({});
   const [enviando, setEnviando] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setErrosCampo({ ...errosCampo, [e.target.name]: undefined });
     setErro("");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  function validar() {
+    const erros: Partial<Record<keyof CadastroForm, string>> = {};
+    if (!form.nomeCompleto.trim()) erros.nomeCompleto = "Informe seu nome completo.";
+    if (!form.username.trim()) erros.username = "Informe um nome de usuário.";
+    if (!form.email.trim()) erros.email = "Informe seu e-mail.";
+    else if (!emailValido(form.email)) erros.email = "Informe um e-mail válido.";
+    if (!form.senha) erros.senha = "Informe uma senha.";
+    else if (form.senha.length < 6) erros.senha = "A senha deve ter no mínimo 6 caracteres.";
+    if (!form.confirmarSenha) erros.confirmarSenha = "Confirme sua senha.";
+    else if (form.senha !== form.confirmarSenha) erros.confirmarSenha = "As senhas não coincidem.";
+    return erros;
+  }
+
+  const propsCampo = (nome: keyof CadastroForm) => ({
+    name: nome,
+    value: form[nome],
+    onChange: handleChange,
+    "aria-invalid": errosCampo[nome] ? true : undefined,
+    "aria-describedby": errosCampo[nome] ? `erro-${nome}` : undefined,
+  });
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (form.senha !== form.confirmarSenha) {
-      setErro("As senhas não coincidem.");
+    const erros = validar();
+    setErrosCampo(erros);
+    const primeiro = Object.keys(erros)[0];
+    if (primeiro) {
+      e.currentTarget.querySelector<HTMLInputElement>(`[name="${primeiro}"]`)?.focus();
       return;
     }
 
@@ -97,44 +108,49 @@ export default function Cadastro() {
 
   return (
     <main
-       className={`${outfit.className} flex min-h-screen items-stretch gap-[6vw] bg-[#f4f1e3] px-4 md:h-screen md:overflow-hidden md:px-[6vw]`}
+       className={`${outfit.className} ${estiloPagina}`}
     >
-      <section className="mt-[10.7vh] flex-1 rounded-t-[40px] bg-[#202020] px-6 pb-10 pt-14 text-[#f4f1e3] md:max-w-[710px] md:flex-none md:basis-[46.5%] md:rounded-t-[70px] md:px-20 md:pb-[60px] md:pt-[100px]">
-        <h1 className="mb-12 text-center text-[clamp(1.8rem,2.6vw,2.6rem)] font-extrabold uppercase leading-[1.1] tracking-[0.01em]">
+      <section className={estiloCartao}>
+        <h1 className={estiloTitulo}>
           Crie sua conta
         </h1>
 
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          <input className={campo} name="nomeCompleto" placeholder="Nome Completo" autoComplete="name"
-            value={form.nomeCompleto} onChange={handleChange} required />
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+          <input className={`${campo} ${errosCampo.nomeCompleto ? estiloInvalido : ""}`} placeholder="Nome Completo"
+            aria-label="Nome completo" autoComplete="name" {...propsCampo("nomeCompleto")} />
+          <MensagemCampo id="erro-nomeCompleto" texto={errosCampo.nomeCompleto} />
 
-          <input className={campo} name="username" placeholder="Username" autoComplete="username"
-            value={form.username} onChange={handleChange} required />
+          <input className={`${campo} ${errosCampo.username ? estiloInvalido : ""}`} placeholder="Username"
+            aria-label="Nome de usuário" autoComplete="username" {...propsCampo("username")} />
+          <MensagemCampo id="erro-username" texto={errosCampo.username} />
 
-          <input className={campo} name="email" type="email" placeholder="Email" autoComplete="email"
-            value={form.email} onChange={handleChange} required />
+          <input className={`${campo} ${errosCampo.email ? estiloInvalido : ""}`} type="email" placeholder="Email"
+            aria-label="E-mail" autoComplete="email" {...propsCampo("email")} />
+          <MensagemCampo id="erro-email" texto={errosCampo.email} />
 
           <div className="relative">
-            <input className={`${campo} pr-[68px]`} name="senha" placeholder="Senha" autoComplete="new-password"
-              type={mostrarSenha ? "text" : "password"}
-              value={form.senha} onChange={handleChange} required minLength={6} />
+            <input className={`${campo} pr-[68px] ${errosCampo.senha ? estiloInvalido : ""}`} placeholder="Senha"
+              aria-label="Senha" autoComplete="new-password"
+              type={mostrarSenha ? "text" : "password"} {...propsCampo("senha")} />
             <button type="button" className={botaoOlho}
               onClick={() => setMostrarSenha(!mostrarSenha)}
               aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}>
               <EyeIcon aberto={mostrarSenha} />
             </button>
           </div>
+          <MensagemCampo id="erro-senha" texto={errosCampo.senha} />
 
           <div className="relative">
-            <input className={`${campo} pr-[68px]`} name="confirmarSenha" placeholder="Confirmar Senha" autoComplete="new-password"
-              type={mostrarConfirmar ? "text" : "password"}
-              value={form.confirmarSenha} onChange={handleChange} required />
+            <input className={`${campo} pr-[68px] ${errosCampo.confirmarSenha ? estiloInvalido : ""}`} placeholder="Confirmar Senha"
+              aria-label="Confirmar senha" autoComplete="new-password"
+              type={mostrarConfirmar ? "text" : "password"} {...propsCampo("confirmarSenha")} />
             <button type="button" className={botaoOlho}
               onClick={() => setMostrarConfirmar(!mostrarConfirmar)}
               aria-label={mostrarConfirmar ? "Ocultar senha" : "Mostrar senha"}>
               <EyeIcon aberto={mostrarConfirmar} />
             </button>
           </div>
+          <MensagemCampo id="erro-confirmarSenha" texto={errosCampo.confirmarSenha} />
 
           {erro && (
             <p className="text-center text-[0.95rem] text-[#ff8a8a]" role="alert">
@@ -145,7 +161,7 @@ export default function Cadastro() {
           <button
             type="submit"
             disabled={enviando}
-            className="mt-7 h-14 w-full cursor-pointer rounded-full bg-[#5e3dec] text-[1.4rem] font-medium uppercase text-[#f4f1e3] transition enabled:hover:brightness-110 disabled:cursor-default disabled:opacity-60 focus-visible:outline-3 focus-visible:outline-offset-[3px] focus-visible:outline-[#f4f1e3]"
+            className={botaoPrincipal}
           >
             {enviando ? "Criando..." : "Criar conta"}
           </button>
@@ -158,7 +174,7 @@ export default function Cadastro() {
           </Link>
         </p>
       </section>
-      <aside className="mt-[10.7vh] hidden min-h-0 min-w-0 flex-1 flex-col items-center gap-8 overflow-hidden md:flex">
+      <aside className="mt-[10.7vh] hidden min-h-0 min-w-0 flex-1 flex-col items-center gap-8 md:flex">
   <Image
           className="transform -translate-y-30 relative w-full max-w-[460px] shrink-0"
           src="/logo-stockio.png"

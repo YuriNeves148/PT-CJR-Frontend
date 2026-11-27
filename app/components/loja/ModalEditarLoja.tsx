@@ -23,7 +23,7 @@ export type LojaEditavel = DadosEdicaoLoja & {
   id: number;
   imagens: Record<TipoImagemLoja, string | null>;
 };
-type Categoria = { id: number; nome: string };
+type Categoria = { id: number; nome: string; categoria_pai_id?: number | null };
 const TITULOS: Record<TipoImagemLoja, string> = {
   "foto-perfil": "Anexe a foto de perfil de sua loja",
   logo: "Anexe a logo em SVG de sua loja",
@@ -255,11 +255,17 @@ export default function ModalEditarLoja({
                       : "Selecione uma categoria"}
                   </option>
                 )}
-                {categorias.map((categoria) => (
-                  <option key={categoria.id} value={categoria.id}>
-                    {categoria.nome}
-                  </option>
-                ))}
+                {categorias
+                  .filter(
+                    (categoria) =>
+                      (categoria.categoria_pai_id ?? null) === null ||
+                      String(categoria.id) === categoriaId,
+                  )
+                  .map((categoria) => (
+                    <option key={categoria.id} value={categoria.id}>
+                      {categoria.nome}
+                    </option>
+                  ))}
               </select>
               <svg
                 width="26"

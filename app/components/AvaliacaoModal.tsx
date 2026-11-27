@@ -2,9 +2,11 @@
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import type { AvaliacaoFormData } from "@/app/service/avaliacaoLojaService";
+import { ROTULO_AVALIACAO, type TipoAvaliacao } from "@/app/service/avaliacoes";
 
 interface AvaliacaoModalProps {
-  lojaNome: string; // aparece em "Você está avaliando <loja>"
+  nome: string; // aparece em "Você está avaliando <nome>"
+  tipo?: TipoAvaliacao;
   textoBotao: string; // "Avaliar" ou "Salvar"
   valoresIniciais?: Partial<AvaliacaoFormData>; // preenchido só no modo editar
   onSalvar: (dados: AvaliacaoFormData) => Promise<void>;
@@ -19,7 +21,8 @@ const NOTAS = [1, 2, 3, 4, 5];
 // Para o formulário começar limpo toda vez, a página deve renderizar o modal
 // só quando ele estiver aberto: {aberto && <AdicionarAvaliacaoModal ... />}
 export default function AvaliacaoModal({
-  lojaNome,
+  nome,
+  tipo = "loja",
   textoBotao,
   valoresIniciais,
   onSalvar,
@@ -35,8 +38,6 @@ export default function AvaliacaoModal({
   async function enviar(e: FormEvent) {
     e.preventDefault();
     setErro("");
-
-    if (nota < 1) return setErro("Escolha de 1 a 5 estrelas.");
 
     setSalvando(true);
     try {
@@ -63,13 +64,14 @@ export default function AvaliacaoModal({
   }
 
   const notaExibida = notaEmFoco || nota;
+  const alvo = `d${ROTULO_AVALIACAO[tipo].artigo} ${ROTULO_AVALIACAO[tipo].nome}`;
   const botao =
     "w-full max-w-[280px] rounded-full py-2 text-sm text-white shadow-[0_3px_4px_rgba(0,0,0,0.3)] disabled:opacity-60";
 
   return (
     <FundoModal onFechar={onFechar}>
       <h2 id="titulo-modal-avaliacao" className="pr-8 text-2xl font-light text-black sm:text-[28px]">
-        Você está avaliando <span className="font-semibold">{lojaNome}</span>
+        Você está avaliando <span className="font-semibold">{nome}</span>
       </h2>
 
       <form onSubmit={enviar} className="mt-7 flex flex-col">
@@ -78,7 +80,7 @@ export default function AvaliacaoModal({
           className="flex justify-center gap-2 sm:gap-4"
           onMouseLeave={() => setNotaEmFoco(0)}
         >
-          <legend className="sr-only">Nota da loja, de 1 a 5 estrelas</legend>
+          <legend className="sr-only">Nota {alvo}, de 0 a 5 estrelas</legend>
           {NOTAS.map((valor) => (
             <label
               key={valor}
@@ -91,6 +93,7 @@ export default function AvaliacaoModal({
                 value={valor}
                 checked={nota === valor}
                 onChange={() => setNota(valor)}
+                onClick={() => nota === valor && setNota(0)}
                 className="sr-only"
                 aria-label={`${valor} ${valor === 1 ? "estrela" : "estrelas"}`}
               />
@@ -98,10 +101,13 @@ export default function AvaliacaoModal({
             </label>
           ))}
         </fieldset>
+        <p aria-live="polite" className="mt-2 text-center text-sm text-neutral-600">
+          Sua nota: {nota} de 5{nota > 0 && " (clique na mesma estrela para zerar)"}
+        </p>
 
         <textarea
-          placeholder="Avaliação da loja"
-          aria-label="Avaliação da loja"
+          placeholder={`Avaliação ${alvo}`}
+          aria-label={`Avaliação ${alvo}`}
           value={comentario}
           onChange={(e) => setComentario(e.target.value)}
           maxLength={2000}

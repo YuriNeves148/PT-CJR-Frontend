@@ -76,7 +76,8 @@ export default function CadastroLoja({
             typeof categoria === "object" &&
             categoria !== null &&
             typeof categoria.id === "number" &&
-            typeof categoria.nome === "string"
+            typeof categoria.nome === "string" &&
+            (categoria.categoria_pai_id ?? null) === null
         );
 
         if (!controlador.signal.aborted) {

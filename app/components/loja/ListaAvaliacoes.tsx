@@ -10,14 +10,16 @@ import {
 
 type ListaAvaliacoesProps = {
   avaliacoes: AvaliacaoLoja[];
-  lojaId: number;
+  comentariosHref: string; // base do link "ver comentários", ex: /loja/1/avaliacoes
+  mensagemVazia?: string;
 };
 
 const AVALIACOES_POR_PAGINA = 3;
 
 export default function ListaAvaliacoes({
   avaliacoes,
-  lojaId,
+  comentariosHref,
+  mensagemVazia = "Esta loja ainda não possui avaliações.",
 }: ListaAvaliacoesProps) {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [expandidas, setExpandidas] = useState<number[]>([]);
@@ -58,7 +60,7 @@ export default function ListaAvaliacoes({
     <div className="mx-auto w-full max-w-[760px]">
       {avaliacoesVisiveis.length === 0 ? (
         <p className="py-12 text-center text-gray-400">
-          Esta loja ainda não possui avaliações.
+          {mensagemVazia}
         </p>
       ) : (
         <div className="flex flex-col gap-6">
@@ -106,7 +108,7 @@ export default function ListaAvaliacoes({
 
                   <div className="mt-auto flex items-center justify-end gap-4 pt-2 text-sm text-[#8646FF]">
                     <Link
-                      href={`/loja/${lojaId}/avaliacoes/${avaliacao.id}`}
+                      href={`${comentariosHref}/${avaliacao.id}`}
                       className="hover:underline"
                     >
                       ver comentários

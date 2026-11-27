@@ -68,7 +68,7 @@ export default async function AvaliacoesPage({
 
         <ListaAvaliacoes
           avaliacoes={avaliacoes}
-          lojaId={loja.id}
+          comentariosHref={`/loja/${loja.id}/avaliacoes`}
         />
       </div>
     </main>

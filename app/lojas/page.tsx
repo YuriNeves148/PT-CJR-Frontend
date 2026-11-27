@@ -7,7 +7,7 @@ import {
 } from "@/app/lib/lojas";
 
 export const metadata: Metadata = {
-  title: "Lojas | Stock.io",
+  title: "Lojas",
 };
 
 export default async function LojasPage() {

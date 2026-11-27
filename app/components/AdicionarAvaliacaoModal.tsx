@@ -1,24 +1,31 @@
 "use client";
 
 import AvaliacaoModal from "./AvaliacaoModal";
-import { criarAvaliacaoLoja } from "@/app/service/avaliacaoLojaService";
+import { servicosAvaliacao, type TipoAvaliacao } from "@/app/service/avaliacoes";
 
 interface AdicionarAvaliacaoModalProps {
-  lojaId: number; // loja que está sendo avaliada
-  lojaNome: string; // a página da loja já tem o nome; aparece em "Você está avaliando <loja>"
+  tipo?: TipoAvaliacao;
+  alvoId: number; // id da loja ou do produto avaliado
+  nome: string; // aparece em "Você está avaliando <nome>"
   onFechar: () => void;
-  onCriado: () => void; // chamado depois de salvar, ex: para recarregar a lista de avaliações
+  onCriado: () => void;
 }
 
-// Uso: {aberto && <AdicionarAvaliacaoModal lojaId={...} lojaNome={...} onFechar={...} onCriado={...} />}
-export default function AdicionarAvaliacaoModal({ lojaId, lojaNome, onFechar, onCriado }: AdicionarAvaliacaoModalProps) {
+// Uso: {aberto && <AdicionarAvaliacaoModal alvoId={...} nome={...} onFechar={...} onCriado={...} />}
+export default function AdicionarAvaliacaoModal({
+  tipo = "loja",
+  alvoId,
+  nome,
+  onFechar,
+  onCriado,
+}: AdicionarAvaliacaoModalProps) {
   return (
     <AvaliacaoModal
-      lojaNome={lojaNome}
+      tipo={tipo}
+      nome={nome}
       textoBotao="Avaliar"
       onSalvar={async (dados) => {
-        // Se der erro, o AvaliacaoModal mostra a mensagem e continua aberto
-        await criarAvaliacaoLoja(lojaId, dados);
+        await servicosAvaliacao[tipo].criar(alvoId, dados);
         onCriado();
         onFechar();
       }}

@@ -48,12 +48,24 @@ export function buscarAvaliacaoLoja(
   return consultar<AvaliacaoLojaDetalhe>(`/avaliacoes-loja/${id}`);
 }
 
+export type AvaliacaoProdutoDetalhe = Omit<AvaliacaoLojaDetalhe, "loja_id"> & {
+  produto_id: number;
+};
+
+export function buscarAvaliacaoProduto(
+  id: string,
+): Promise<Consulta<AvaliacaoProdutoDetalhe>> {
+  if (!idValido(id)) return Promise.resolve({ status: "nao-encontrado" });
+  return consultar<AvaliacaoProdutoDetalhe>(`/avaliacoes-produtos/${id}`);
+}
+
 export function buscarComentarios(
   avaliacaoId: string,
+  tipo: "loja" | "produto" = "loja",
 ): Promise<Consulta<ComentarioApi[]>> {
   if (!idValido(avaliacaoId)) return Promise.resolve({ status: "nao-encontrado" });
   return consultar<ComentarioApi[]>(
-    `/comentarios?avaliacao_loja_id=${avaliacaoId}`,
+    `/comentarios?avaliacao_${tipo}_id=${avaliacaoId}`,
   );
 }
 

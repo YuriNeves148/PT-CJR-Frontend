@@ -10,6 +10,8 @@ interface ProdutoApi {
   preco: string; // Decimal do Prisma chega como string, ex: "3899.99"
   estoque: number;
   imagem?: { id: number; url_imagem: string; ordem: number }[];
+  createdAt?: string | null;
+  media_avaliacoes?: number | null;
 }
 
 // O backend salva as fotos como "/uploads/produtos/arquivo.jpg" e serve essa pasta
@@ -33,6 +35,8 @@ export interface Produto {
   preco: number;
   imagem: string;
   disponivel: boolean;
+  criadoEm: number;
+  media: number | null;
 }
 
 // Formato que o backend devolve para GET /lojas (listagem pública, sem produtos/avaliações)
@@ -86,6 +90,8 @@ export async function getProdutos(): Promise<Produto[]> {
       preco: Number(p.preco),
       imagem: primeiraImagem ? urlImagem(primeiraImagem.url_imagem) : '/logo-stockio.png',
       disponivel: p.estoque > 0,
+      criadoEm: p.createdAt ? new Date(p.createdAt).getTime() : 0,
+      media: p.media_avaliacoes ?? null,
     };
   });
 }

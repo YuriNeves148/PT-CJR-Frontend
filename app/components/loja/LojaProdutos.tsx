@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Poppins } from "next/font/google";
 import ProdutoCard, {
     type ProdutoLoja,
@@ -18,6 +18,7 @@ type LojaProdutosProps = {
     produtos: ProdutoLoja[];
     melhoresAvaliados: ProdutoLoja[];
     produtosPorPagina?: number;
+    acoes?: ReactNode;
 };
 
 export default function LojaProdutos({
@@ -25,10 +26,19 @@ export default function LojaProdutos({
     produtos,
     melhoresAvaliados,
     produtosPorPagina = 15,
+    acoes,
 }: LojaProdutosProps) {
     const [paginaAtual, setPaginaAtual] = useState(1);
+    const [ordem, setOrdem] = useState("");
 
     const quantidadePorPagina = Math.max(1, produtosPorPagina);
+
+    const produtosOrdenados =
+        ordem === "menor" ? produtos.toSorted((a, b) => a.preco - b.preco)
+        : ordem === "maior" ? produtos.toSorted((a, b) => b.preco - a.preco)
+        : ordem === "recentes" ? produtos.toSorted((a, b) => (b.criadoEm ?? 0) - (a.criadoEm ?? 0))
+        : ordem === "avaliados" ? produtos.toSorted((a, b) => (b.media ?? -1) - (a.media ?? -1))
+        : produtos;
 
     const totalPaginas = Math.ceil(
         produtos.length / quantidadePorPagina
@@ -41,7 +51,7 @@ export default function LojaProdutos({
 
     const inicio = (paginaSegura - 1) * quantidadePorPagina;
 
-    const produtosVisiveis = produtos.slice(
+    const produtosVisiveis = produtosOrdenados.slice(
         inicio,
         inicio + quantidadePorPagina
     );
@@ -117,6 +127,26 @@ export default function LojaProdutos({
                             </span>
                         </h2>
 
+                        <div className="flex flex-wrap items-center gap-3">
+                            {produtos.length > 1 && (
+                                <select
+                                    value={ordem}
+                                    onChange={(e) => {
+                                        setOrdem(e.target.value);
+                                        setPaginaAtual(1);
+                                    }}
+                                    aria-label="Ordenar produtos da loja"
+                                    className="cursor-pointer rounded-full bg-white px-4 py-2 text-xs text-[#6A38F3] outline-none focus-visible:ring-2 focus-visible:ring-[#6A38F3]"
+                                >
+                                    <option value="">Padrão</option>
+                                    <option value="menor">Menor preço</option>
+                                    <option value="maior">Maior preço</option>
+                                    <option value="recentes">Recém-adicionados</option>
+                                    <option value="avaliados">Melhor avaliados</option>
+                                </select>
+                            )}
+                            {acoes}
+                        </div>
                     </div>
 
                     {produtosVisiveis.length > 0 ? (

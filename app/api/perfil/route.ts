@@ -54,3 +54,45 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ message: "Não foi possível conectar ao backend." }, { status: 502 });
   }
 }
+
+export async function DELETE() {
+  const token = await getTokenSessao();
+  if (!token) return NextResponse.json({ message: "Faça login para excluir sua conta." }, { status: 401 });
+
+  try {
+    const sessao = await fetch(`${BACKEND_URL}/user/me`, {
+      headers: { Authorization: `Bearer ${token}` }, cache: "no-store",
+    });
+    if (!sessao.ok) {
+      return NextResponse.json({ message: "Não foi possível validar a sessão." }, { status: sessao.status === 401 ? 401 : 502 });
+    }
+    const usuario = await sessao.json();
+    if (!Number.isSafeInteger(usuario.id) || usuario.id <= 0) {
+      return NextResponse.json({ message: "Sessão inválida." }, { status: 502 });
+    }
+
+    const resposta = await fetch(`${BACKEND_URL}/user/${usuario.id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!resposta.ok) {
+      const resultado: unknown = await resposta.json().catch(() => null);
+      const message = resultado && typeof resultado === "object" && "message" in resultado
+        ? resultado.message : "Não foi possível excluir a conta.";
+      return NextResponse.json({ message }, { status: resposta.status });
+    }
+
+    const resultado = NextResponse.json({ sucesso: true }, { headers: { "Cache-Control": "no-store" } });
+    resultado.cookies.set("session", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 0,
+    });
+    return resultado;
+  } catch {
+    return NextResponse.json({ message: "Não foi possível conectar ao backend." }, { status: 502 });
+  }
+}

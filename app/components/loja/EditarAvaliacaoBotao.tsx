@@ -3,16 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import EditarAvaliacaoModal from "@/app/components/EditarAvaliacaoModal";
+import type { TipoAvaliacao } from "@/app/service/avaliacoes";
 
 type EditarAvaliacaoBotaoProps = {
+  tipo?: TipoAvaliacao;
   avaliacaoId: number;
-  lojaId: number;
-  lojaNome: string;
+  nome: string;
+  voltarPara: string; // página aberta depois de deletar a avaliação
 };
 
-// Lápis da página de uma avaliação: abre o modal "Editar uma avaliação".
 // A página só renderiza este botão para o autor da avaliação.
-export default function EditarAvaliacaoBotao({ avaliacaoId, lojaId, lojaNome }: EditarAvaliacaoBotaoProps) {
+export default function EditarAvaliacaoBotao({ tipo = "loja", avaliacaoId, nome, voltarPara }: EditarAvaliacaoBotaoProps) {
   const router = useRouter();
   const [aberto, setAberto] = useState(false);
 
@@ -43,13 +44,13 @@ export default function EditarAvaliacaoBotao({ avaliacaoId, lojaId, lojaNome }: 
 
       {aberto && (
         <EditarAvaliacaoModal
+          tipo={tipo}
           avaliacaoId={avaliacaoId}
-          lojaNome={lojaNome}
+          nome={nome}
           onFechar={() => setAberto(false)}
           onAlterado={() => router.refresh()}
-          // A avaliação deixou de existir: volta para a lista de avaliações da loja
           onDeletado={() => {
-            router.push(`/loja/${lojaId}/avaliacoes`);
+            router.push(voltarPara);
             router.refresh();
           }}
         />

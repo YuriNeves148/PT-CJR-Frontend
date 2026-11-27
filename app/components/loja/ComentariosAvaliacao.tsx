@@ -16,12 +16,14 @@ export type ComentarioView = {
 };
 
 type ComentariosAvaliacaoProps = {
+  tipo?: "loja" | "produto";
   avaliacaoId: number;
   comentarios: ComentarioView[];
   logado: boolean;
 };
 
 export default function ComentariosAvaliacao({
+  tipo = "loja",
   avaliacaoId,
   comentarios,
   logado,
@@ -47,7 +49,7 @@ export default function ComentariosAvaliacao({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           conteudo,
-          avaliacao_loja_id: avaliacaoId,
+          [tipo === "produto" ? "avaliacao_produto_id" : "avaliacao_loja_id"]: avaliacaoId,
         }),
       });
 
@@ -95,7 +97,7 @@ export default function ComentariosAvaliacao({
 
                 {comentario.donoDaLoja && (
                   <p className="text-[10px] leading-none text-[#6A38F3]">
-                    dona da loja
+                    dono(a) da loja
                   </p>
                 )}
 

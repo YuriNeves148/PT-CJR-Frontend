@@ -13,6 +13,7 @@ export function carregar(
     fetch = async () => {
       throw Error("Requisição inesperada");
     },
+    env = {},
   } = {},
 ) {
   const filename = fileURLToPath(new URL(arquivo, root));
@@ -22,6 +23,7 @@ export function carregar(
       module: ts.ModuleKind.CommonJS,
       target: ts.ScriptTarget.ES2022,
       esModuleInterop: true,
+      jsx: ts.JsxEmit.ReactJSX,
     },
   });
   const modulo = { exports: {} };
@@ -37,6 +39,7 @@ export function carregar(
       FormData,
       File,
       fetch,
+      process: { env },
       require: (name) =>
         Object.hasOwn(imports, name) ? imports[name] : require(name),
     },

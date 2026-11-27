@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 type LojaHeroProps = {
   nome: string;
   categoria: string;
+  descricao?: string | null;
   bannerUrl?: string | null;
   logoUrl?: string | null;
   proprietario: string;
@@ -16,6 +17,7 @@ type LojaHeroProps = {
 export default function LojaHero({
   nome,
   categoria,
+  descricao,
   bannerUrl,
   logoUrl,
   proprietario,
@@ -82,6 +84,12 @@ export default function LojaHero({
         <p className="text-base sm:text-lg lg:text-xl">
           {categoria}
         </p>
+
+        {descricao && (
+          <p className="mt-3 line-clamp-2 max-w-2xl text-sm text-[#F8F5E9]/85 sm:text-base">
+            {descricao}
+          </p>
+        )}
       </div>
 
       {/* Nome do proprietário */}

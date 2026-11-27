@@ -43,7 +43,7 @@ export async function getNomeLoja(lojaId: number): Promise<string> {
 
 // O token está no cookie httpOnly, então essas chamadas passam pelas rotas do
 // próprio Next (app/api/avaliacoes-loja), e não vão direto para o backend.
-async function chamarRotaInterna<T>(url: string, method: string, body?: unknown): Promise<T> {
+export async function chamarRotaInterna<T>(url: string, method: string, body?: unknown): Promise<T> {
   const resposta = await fetch(url, {
     method,
     headers: body ? { 'Content-Type': 'application/json' } : undefined,

@@ -4,10 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AdicionarAvaliacaoModal from "@/app/components/AdicionarAvaliacaoModal";
+import { ROTULO_AVALIACAO, type TipoAvaliacao } from "@/app/service/avaliacoes";
 
 type AdicionarAvaliacaoBotaoProps = {
-  lojaId: number;
-  lojaNome: string;
+  tipo?: TipoAvaliacao;
+  alvoId: number;
+  nome: string;
   logado: boolean;
 };
 
@@ -22,15 +24,15 @@ function IconeMais() {
   );
 }
 
-// Botão "+" do topo da loja: abre o modal "Fazer uma avaliação".
 // Sem login, leva para a tela de login (o backend exige usuário para avaliar).
-export default function AdicionarAvaliacaoBotao({ lojaId, lojaNome, logado }: AdicionarAvaliacaoBotaoProps) {
+export default function AdicionarAvaliacaoBotao({ tipo = "loja", alvoId, nome, logado }: AdicionarAvaliacaoBotaoProps) {
   const router = useRouter();
   const [aberto, setAberto] = useState(false);
+  const rotulo = ROTULO_AVALIACAO[tipo];
 
   if (!logado) {
     return (
-      <Link href="/login" aria-label="Entre para avaliar a loja" className={ESTILO_BOTAO}>
+      <Link href="/login" aria-label={`Entre para avaliar ${rotulo.artigo} ${rotulo.nome}`} className={ESTILO_BOTAO}>
         <IconeMais />
       </Link>
     );
@@ -40,7 +42,7 @@ export default function AdicionarAvaliacaoBotao({ lojaId, lojaNome, logado }: Ad
     <>
       <button
         type="button"
-        aria-label="Avaliar loja"
+        aria-label={`Avaliar ${rotulo.nome}`}
         aria-haspopup="dialog"
         aria-expanded={aberto}
         onClick={() => setAberto(true)}
@@ -51,10 +53,10 @@ export default function AdicionarAvaliacaoBotao({ lojaId, lojaNome, logado }: Ad
 
       {aberto && (
         <AdicionarAvaliacaoModal
-          lojaId={lojaId}
-          lojaNome={lojaNome}
+          tipo={tipo}
+          alvoId={alvoId}
+          nome={nome}
           onFechar={() => setAberto(false)}
-          // A página da loja é renderizada no servidor: refresh busca a média e a lista de novo
           onCriado={() => router.refresh()}
         />
       )}

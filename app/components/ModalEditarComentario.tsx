@@ -31,6 +31,7 @@ export default function ModalEditarComentario({
   return (
     <dialog
       ref={dialogRef}
+      aria-label="Editar comentário"
       onClose={onFechar}
       className="open:flex flex-col rounded-4xl p-6 m-auto bg-[#EDEDED] w-[830px] max-w-[95vw] h-[510px] max-h-[95vh] backdrop:bg-black/60"
     >
@@ -142,6 +143,7 @@ function FormularioEdicao({
         value={conteudo}
         onChange={(e) => setConteudo(e.target.value)}
         placeholder="Comentário"
+        aria-label="Comentário"
         className="w-full flex-1 min-h-0 resize-none rounded-3xl bg-white p-8 text-lg outline-none"
       />
 
@@ -152,7 +154,7 @@ function FormularioEdicao({
         disabled={enviando}
         className="bg-[#6A38F3] hover:bg-[#8c77e6] text-white w-[460px] max-w-full rounded-full py-2 text-lg shadow-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {enviando ? "Salvando..." : "Avaliar"}
+        {enviando ? "Salvando..." : "Salvar"}
       </button>
     </form>
   );

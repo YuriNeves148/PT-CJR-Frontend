@@ -4,6 +4,7 @@ import LojaAvaliacoes from "@/app/components/loja/LojaAvaliacoes";
 import LojaProdutos from "@/app/components/loja/LojaProdutos";
 import EditarLoja from "@/app/components/loja/EditarLoja";
 import AdicionarAvaliacaoBotao from "@/app/components/loja/AdicionarAvaliacaoBotao";
+import AdicionarProdutoBotao from "@/app/components/produto/AdicionarProdutoBotao";
 import {
   buscarLoja,
   getUsuarioSessao,
@@ -45,6 +46,7 @@ export default async function LojaPage({ params }: LojaPageProps) {
       <LojaHero
         nome={loja.nome}
         categoria={loja.categoria?.nome ?? "Sem categoria"}
+        descricao={loja.descricao}
         bannerUrl={urlImagemSegura(loja.banner_url)}
         logoUrl={urlImagemSegura(loja.logo_url)}
         proprietario={loja.usuario.nome}
@@ -66,8 +68,8 @@ export default async function LojaPage({ params }: LojaPageProps) {
               />
             )}
             <AdicionarAvaliacaoBotao
-              lojaId={loja.id}
-              lojaNome={loja.nome}
+              alvoId={loja.id}
+              nome={loja.nome}
               logado={sessao !== null}
             />
           </div>
@@ -85,6 +87,7 @@ export default async function LojaPage({ params }: LojaPageProps) {
         produtos={loja.produtos.map(mapearProduto)}
         melhoresAvaliados={produtosMelhorAvaliados(loja.produtos)}
         produtosPorPagina={5}
+        acoes={ehDono ? <AdicionarProdutoBotao lojaId={loja.id} /> : undefined}
       />
     </main>
   );

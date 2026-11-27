@@ -100,8 +100,8 @@ export default async function ComentariosAvaliacaoPage({ params }: PageProps) {
               {usuario !== null && usuario.id === autor.id && (
                 <EditarAvaliacaoBotao
                   avaliacaoId={avaliacao.dados.id}
-                  lojaId={loja.dados.id}
-                  lojaNome={loja.dados.nome}
+                  nome={loja.dados.nome}
+                  voltarPara={`/loja/${loja.dados.id}/avaliacoes`}
                 />
               )}
               <Estrelas nota={avaliacao.dados.nota} tamanho="text-2xl" />

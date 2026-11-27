@@ -2,41 +2,38 @@
 
 import { useEffect, useState } from "react";
 import AvaliacaoModal, { AvisoCarregando } from "./AvaliacaoModal";
-import {
-  atualizarAvaliacaoLoja,
-  deletarAvaliacaoLoja,
-  getAvaliacaoLoja,
-  type AvaliacaoLojaDetalhe,
-} from "@/app/service/avaliacaoLojaService";
+import type { AvaliacaoFormData } from "@/app/service/avaliacaoLojaService";
+import { servicosAvaliacao, type TipoAvaliacao } from "@/app/service/avaliacoes";
 
 interface EditarAvaliacaoModalProps {
+  tipo?: TipoAvaliacao;
   avaliacaoId: number;
-  lojaNome: string; // a página da loja já tem o nome; aparece em "Você está avaliando <loja>"
+  nome: string; // aparece em "Você está avaliando <nome>"
   onFechar: () => void;
-  onAlterado: () => void; // chamado depois de salvar ou deletar, ex: para recarregar a lista
-  // Se for passado, é chamado depois de deletar no lugar de onAlterado
-  // (ex: a página da própria avaliação precisa sair dela, e não recarregar)
+  onAlterado: () => void;
+  // Se for passado, substitui onAlterado depois de deletar (ex: sair da página da avaliação)
   onDeletado?: () => void;
 }
 
-// Uso: {avaliacaoEditando && <EditarAvaliacaoModal avaliacaoId={avaliacaoEditando} lojaNome={...} onFechar={...} onAlterado={...} />}
 // Só o autor consegue salvar ou deletar: para outra pessoa o backend responde 403 e o modal mostra o erro.
 export default function EditarAvaliacaoModal({
+  tipo = "loja",
   avaliacaoId,
-  lojaNome,
+  nome,
   onFechar,
   onAlterado,
   onDeletado,
 }: EditarAvaliacaoModalProps) {
-  const [avaliacao, setAvaliacao] = useState<AvaliacaoLojaDetalhe | null>(null);
+  const [avaliacao, setAvaliacao] = useState<AvaliacaoFormData | null>(null);
   const [erro, setErro] = useState("");
+  const servico = servicosAvaliacao[tipo];
 
-  // Busca a avaliação atual para preencher as estrelas e o texto
   useEffect(() => {
-    getAvaliacaoLoja(avaliacaoId)
+    servico
+      .buscar(avaliacaoId)
       .then(setAvaliacao)
       .catch(() => setErro("Não foi possível carregar a avaliação."));
-  }, [avaliacaoId]);
+  }, [servico, avaliacaoId]);
 
   if (!avaliacao) {
     return <AvisoCarregando erro={erro} texto="Carregando avaliação..." onFechar={onFechar} />;
@@ -44,17 +41,17 @@ export default function EditarAvaliacaoModal({
 
   return (
     <AvaliacaoModal
-      lojaNome={lojaNome}
+      tipo={tipo}
+      nome={nome}
       textoBotao="Salvar"
       valoresIniciais={{ nota: avaliacao.nota, comentario: avaliacao.comentario }}
       onSalvar={async (novosDados) => {
-        await atualizarAvaliacaoLoja(avaliacaoId, novosDados);
+        await servico.atualizar(avaliacaoId, novosDados);
         onAlterado();
         onFechar();
       }}
       onDeletar={async () => {
-        // Os comentários feitos nessa avaliação são apagados junto (onDelete: Cascade no schema)
-        await deletarAvaliacaoLoja(avaliacaoId);
+        await servico.deletar(avaliacaoId);
         onFechar();
         if (onDeletado) onDeletado();
         else onAlterado();
