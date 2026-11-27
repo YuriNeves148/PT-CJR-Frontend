@@ -32,7 +32,14 @@ export default function SecaoCategoriaProdutos({
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {produtos.map((produto) => (
-          <ProdutoCard key={produto.id} produto={produto} />
+          // Mesmo padrão da página da loja: o card inteiro leva ao produto
+          <Link
+            key={produto.id}
+            href={`/produtos_logado?id=${produto.id}`}
+            className="block rounded-[32px] transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6A38F3]"
+          >
+            <ProdutoCard produto={produto} />
+          </Link>
         ))}
       </div>
     </section>

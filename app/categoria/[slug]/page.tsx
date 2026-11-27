@@ -221,9 +221,11 @@ export default function CategoriaPage() {
 
         <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3">
           {produtosPaginados.map((p) => (
-            <article
+            <Link
               key={p.id}
-              className="flex flex-col rounded-[28px] bg-white px-3 pb-3.5 pt-[18px]"
+              href={`/produtos_logado?id=${p.id}`}
+              aria-label={`Ver ${p.nome}`}
+              className="flex flex-col rounded-[28px] bg-white px-3 pb-3.5 pt-[18px] transition-shadow hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6c3df0]"
             >
               <div className="mb-3.5 flex h-[110px] items-center justify-center">
                 <img
@@ -244,7 +246,7 @@ export default function CategoriaPage() {
               >
                 {p.disponivel ? "DISPONÍVEL" : "INDISPONÍVEL"}
               </span>
-            </article>
+            </Link>
           ))}
         </div>
 

@@ -37,8 +37,8 @@ export default function EditarPerfil(dados: DadosPerfil) {
   }, []);
 
   function selecionarFoto(arquivo: File | null) {
-    if (arquivo && (!/\.png$/i.test(arquivo.name) || arquivo.size === 0 || arquivo.size > 2 * 1024 * 1024)) {
-      setErro("Escolha uma imagem PNG válida de até 2 MB.");
+    if (arquivo && (!/\.(png|jpe?g|webp)$/i.test(arquivo.name) || arquivo.size === 0 || arquivo.size > 2 * 1024 * 1024)) {
+      setErro("Escolha uma imagem PNG, JPG, JPEG ou WebP de até 2 MB.");
       return;
     }
     if (previewRef.current) URL.revokeObjectURL(previewRef.current);
@@ -323,8 +323,8 @@ function FotoPerfil({ fotoUrl, nome, aoSelecionar, selecionada, desabilitado }: 
           <span className="text-6xl text-gray-600">{nome.charAt(0).toUpperCase()}</span>
         )}
       </div>
-      <input ref={inputRef} type="file" accept=".png,image/png" disabled={desabilitado} className="sr-only"
-        aria-label="Selecionar foto PNG"
+      <input ref={inputRef} type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" disabled={desabilitado} className="sr-only"
+        aria-label="Selecionar foto de perfil"
         onChange={(evento) => {
           const arquivo = evento.target.files?.[0];
           evento.target.value = "";
@@ -335,7 +335,7 @@ function FotoPerfil({ fotoUrl, nome, aoSelecionar, selecionada, desabilitado }: 
         {fotoUrl ? "Alterar foto" : "Adicionar foto"}
       </button>
       {selecionada && <button type="button" disabled={desabilitado} onClick={() => aoSelecionar(null)} className="text-sm text-red-800 hover:underline">Cancelar seleção</button>}
-      <p className="text-center text-sm text-gray-600">PNG de até 2 MB. A prévia será salva ao clicar em Salvar.</p>
+      <p className="text-center text-sm text-gray-600">PNG, JPG, JPEG ou WebP de até 2 MB. A prévia será salva ao clicar em Salvar.</p>
     </div>
   );
 }

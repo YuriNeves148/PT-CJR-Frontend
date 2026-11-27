@@ -10,7 +10,8 @@ type Loja = {
   nome: string;
   descricao?: string | null;
   logo_url?: string | null;
-  categoria_pai: number | null;
+  foto_perfil_url?: string | null;
+  categoria_id: number | null;
 };
 
 type Categoria = {
@@ -20,6 +21,37 @@ type Categoria = {
 };
 function gerarSlug(nome: string): string {
   return nome.toLocaleLowerCase().normalize("NFD").trim();
+}
+
+// Minúsculas e sem acento, para a busca achar "eletronico" em "Eletrônicos".
+function normalizar(texto: string): string {
+  return texto
+    .toLocaleLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .trim();
+}
+
+// Imagens em public/imagens_categorias, com o nome da categoria normalizado
+// (ex.: "Eletrônicos" -> eletronicos.png). Sem arquivo: imagem padrão.
+const IMAGENS_CATEGORIAS = [
+  "beleza",
+  "brinquedos",
+  "casa",
+  "eletronicos",
+  "farmacia",
+  "jogos",
+  "mercado",
+  "moda",
+  "saude",
+  "tecnologia",
+];
+
+function imagemCategoria(nome: string): string {
+  const arquivo = normalizar(nome);
+  return IMAGENS_CATEGORIAS.includes(arquivo)
+    ? `/imagens_categorias/${arquivo}.png`
+    : "/img_feed/sem-imagem.png";
 }
 
 type ImagemProduto = {
@@ -68,7 +100,10 @@ export default function FeedConteudo() {
   }, []);
 
   /* para CATEGORIAS */
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  // Guarda todas (com subcategorias) para achar a categoria de cada loja;
+  // a lista da tela e do filtro mostra só as principais.
+  const [todasCategorias, setTodasCategorias] = useState<Categoria[]>([]);
+  const categorias = todasCategorias.filter((c) => c.categoria_pai_id === null);
   const [carregandoCategorias, setCarregandoCategorias] = useState(true);
   const [erroCategorias, setErroCategorias] = useState("");
   useEffect(() => {
@@ -82,7 +117,7 @@ export default function FeedConteudo() {
         }
 
         const dados: Categoria[] = await resposta.json();
-        setCategorias(dados.filter((c) => c.categoria_pai_id === null));
+        setTodasCategorias(dados);
       } catch {
         setErroCategorias("Erro de conexão com o servidor.");
       } finally {
@@ -119,6 +154,47 @@ export default function FeedConteudo() {
     carregarProdutos();
   }, []);
 
+  /* para BUSCA (nome do produto e nome da loja) */
+  const [busca, setBusca] = useState("");
+  const termo = normalizar(busca);
+
+  /* para FILTRO DE LOJAS */
+  const [selecionadas, setSelecionadas] = useState<number[]>([]); // ids das categorias marcadas
+  const [verTodasLojas, setVerTodasLojas] = useState(false);
+
+  // Marca a categoria; se ela já estava marcada, desmarca.
+  function alternarCategoria(id: number) {
+    setSelecionadas((atuais) =>
+      atuais.includes(id)
+        ? atuais.filter((atual) => atual !== id)
+        : [...atuais, id],
+    );
+  }
+
+  function categoriaDaLoja(loja: Loja) {
+    return todasCategorias.find((c) => c.id === loja.categoria_id);
+  }
+
+  // Nada marcado: todas as lojas. Com marcadas: lojas de qualquer uma delas.
+  // Loja em subcategoria também aparece quando a categoria pai está marcada.
+  function lojaNasSelecionadas(loja: Loja) {
+    if (selecionadas.length === 0) return true;
+    const categoria = categoriaDaLoja(loja);
+    if (!categoria) return false;
+    return (
+      selecionadas.includes(categoria.id) ||
+      (categoria.categoria_pai_id !== null &&
+        selecionadas.includes(categoria.categoria_pai_id))
+    );
+  }
+
+  const lojasFiltradas = lojas.filter(
+    (loja) => lojaNasSelecionadas(loja) && normalizar(loja.nome).includes(termo),
+  );
+  const produtosFiltrados = produtos.filter((produto) =>
+    normalizar(produto.nome).includes(termo),
+  );
+
   return (
     <main className="w-full overflow-x-hidden">
       <div className="flex flex-row justify-center bg-[#000000]">
@@ -141,6 +217,10 @@ export default function FeedConteudo() {
       <div className="bg-[#F6F3E4] relative z-10 h-auto w-screen -mt-67">
         <div className=" w-330 pt-10 justify-self-center ">
           <input
+            type="search"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            aria-label="Procurar lojas e produtos pelo nome"
             className="flex ml-auto text-base w-200 p-3 rounded-4xl bg-[#FFFFFF] text-black"
             placeholder="Procurar por..."
           ></input>
@@ -166,7 +246,7 @@ export default function FeedConteudo() {
                     className="flex flex-col items-center"
                   >
                     <Image
-                      src="/img_feed/sem-imagem.png"
+                      src={imagemCategoria(categoria.nome)}
                       alt={categoria.nome}
                       width={100}
                       height={100}
@@ -200,8 +280,12 @@ export default function FeedConteudo() {
                 <p className="text-red-600 text-xl">{erroProdutos}</p>
               ) : produtos.length === 0 ? (
                 <p className="text-black text-xl">Nenhum produto cadastrado.</p>
+              ) : produtosFiltrados.length === 0 ? (
+                <p className="text-black text-xl">
+                  Nenhum produto encontrado para &quot;{busca.trim()}&quot;.
+                </p>
               ) : (
-                produtos.map((produto) => {
+                produtosFiltrados.map((produto) => {
                   const disponivel = produto.estoque > 0;
                   // Loja do produto, para o selo no canto da imagem
                   const loja = lojas.find((l) => l.id === produto.loja_id);
@@ -226,7 +310,10 @@ export default function FeedConteudo() {
                         {loja && (
                           <SeloLoja
                             nome={loja.nome}
-                            logoUrl={urlImagem(loja.logo_url, LOGO_LOJA_PADRAO)}
+                            logoUrl={urlImagem(
+                              loja.foto_perfil_url ?? loja.logo_url,
+                              LOGO_LOJA_PADRAO,
+                            )}
                             tamanho="h-14 w-14"
                           />
                         )}
@@ -256,74 +343,93 @@ export default function FeedConteudo() {
 
           {/* INFO. DE LOJAS */}
           <div className="relative">
-            <details className="peer ">
-              <summary className="flex cursor-pointer  list-none items-end [&::-webkit-details-marker]:hidden">
-                <span className="text-black font-semibold text-3xl pt-10">
-                  Lojas
-                </span>
-                <details className="group relative  mt-4 w-fit ml-auto ">
-                  <summary className="flex w-120 cursor-pointer list-none items-center gap-2 rounded-2xl bg-white pl-6 py-2 text-2xl text-black [&::-webkit-details-marker]:hidden hover:bg-gray-100">
-                    filtros
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={5}
-                      className="h-4 w-4 transition-transform group-open:rotate-180"
-                      aria-hidden="true"
+            <div className="flex items-end">
+              <h2 className="text-black font-semibold text-3xl pt-10">Lojas</h2>
+              <details className="group relative mt-4 w-fit ml-auto">
+                <summary className="flex w-120 cursor-pointer list-none items-center gap-2 rounded-2xl bg-white pl-6 py-2 text-2xl text-black [&::-webkit-details-marker]:hidden hover:bg-gray-100">
+                  filtros
+                  {selecionadas.length > 0 && ` (${selecionadas.length})`}
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={5}
+                    className="h-4 w-4 transition-transform group-open:rotate-180"
+                    aria-hidden="true"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </summary>
+
+                {/* FILTROS */}
+                <div className="absolute top-full z-20 w-120 rounded-lg border border-gray-300 bg-white p-4 text-xl text-black shadow-lg">
+                  {carregandoCategorias ? (
+                    <p>Carregando categorias...</p>
+                  ) : erroCategorias ? (
+                    <p className="text-red-600">{erroCategorias}</p>
+                  ) : (
+                    categorias.map((categoria) => (
+                      <label
+                        key={categoria.id}
+                        className="flex cursor-pointer items-center gap-2 capitalize"
+                      >
+                        <input
+                          type="checkbox"
+                          name="categoria"
+                          checked={selecionadas.includes(categoria.id)}
+                          onChange={() => alternarCategoria(categoria.id)}
+                        />
+                        {categoria.nome}
+                      </label>
+                    ))
+                  )}
+                  {selecionadas.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSelecionadas([])}
+                      className="mt-2 cursor-pointer text-blue-600 hover:text-blue-900"
                     >
-                      <path d="m6 9 6 6 6-6" />
-                    </svg>
-                  </summary>
+                      Limpar filtros
+                    </button>
+                  )}
+                </div>
+              </details>
+              <button
+                type="button"
+                onClick={() => setVerTodasLojas(!verTodasLojas)}
+                aria-expanded={verTodasLojas}
+                className="ml-10 pr-10 cursor-pointer text-blue-600 text-lg hover:text-blue-900"
+              >
+                {verTodasLojas ? "ver menos" : "ver mais"}
+              </button>
+            </div>
 
-                  {/* FILTROS */}
-                  <div className="absolute top-full z-20 w-120 rounded-lg border border-gray-300 bg-white p-4 text-xl text-black shadow-lg">
-                    <div>
-                      {carregandoCategorias ? (
-                        <p className="text-black text-xl">
-                          Carregando categorias
-                        </p>
-                      ) : (
-                        categorias.map((categoria) => (
-                          <label
-                            key={categoria.id}
-                            className="flex items-center gap-2 text-transform: capitalize"
-                          >
-                            <input
-                              type="checkbox"
-                              name="categoria"
-                              value={categoria.nome}
-                            />
-                            {categoria.nome}
-                          </label>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </details>
-                <span className="ml-10 pr-10 text-blue-600 text-lg hover:text-blue-900">
-                  ver mais / menos
-                </span>
-              </summary>
-            </details>
-
-            <nav className="flex flex-nowrap shrink-0 items-center gap-11 overflow-hidden pb-40 pt-10 peer-open:flex-wrap">
+            {/* min-h reserva espaço para o menu de filtros aberto */}
+            <nav
+              className={`flex min-h-110 shrink-0 items-start gap-11 overflow-hidden pb-40 pt-10 ${verTodasLojas ? "flex-wrap" : "flex-nowrap"}`}
+            >
               {carregandoLojas ? (
                 <p className="text-black text-xl">Carregando lojas...</p>
               ) : erroLojas ? (
                 <p className="text-red-600 text-xl">{erroLojas}</p>
               ) : lojas.length === 0 ? (
                 <p className="text-black text-xl">Nenhuma loja cadastrada.</p>
+              ) : lojasFiltradas.length === 0 ? (
+                <p className="text-black text-xl">
+                  Nenhuma loja encontrada com esses filtros.
+                </p>
               ) : (
-                lojas.map((loja) => (
-                  <span
+                lojasFiltradas.map((loja) => (
+                  <Link
                     key={loja.id}
-                    className="shrink-0 p-5 max-w-48 flex flex-col items-center"
+                    href={`/loja/${loja.id}`}
+                    className="shrink-0 p-5 max-w-48 flex flex-col items-center rounded-2xl transition-opacity hover:opacity-80"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={urlImagem(
-                        loja.logo_url,
+                        // foto de perfil da loja; sem ela, o logo
+                        loja.foto_perfil_url ?? loja.logo_url,
                         "/img_feed/loja-sem-imagem.png",
                       )}
                       alt={`loja ${loja.nome}`}
@@ -333,8 +439,11 @@ export default function FeedConteudo() {
                       <p className="text-black text-2xl font-bold text-center line-clamp-2 break-words">
                         {loja.nome}
                       </p>
+                      <p className="text-blue-800 text-xl text-center capitalize truncate max-w-full">
+                        {categoriaDaLoja(loja)?.nome ?? "Sem categoria"}
+                      </p>
                     </div>
-                  </span>
+                  </Link>
                 ))
               )}
             </nav>

@@ -29,6 +29,8 @@ interface ProdutoModalProps {
   onSalvar: (dados: ProdutoFormData, fotos: FotosProduto) => Promise<void>;
   onDeletar?: () => Promise<void>; // se for passado, aparece o botão DELETAR
   onFechar: () => void;
+  // Categoria da loja: se passada, o select só oferece ela e as subcategorias dela
+  categoriaLojaId?: number | null;
 }
 
 const ROXO = "#6c3df0";
@@ -48,6 +50,7 @@ export default function ProdutoModal({
   onSalvar,
   onDeletar,
   onFechar,
+  categoriaLojaId,
 }: ProdutoModalProps) {
   const [nome, setNome] = useState(valoresIniciais?.nome ?? "");
   const [categoriaId, setCategoriaId] = useState(
@@ -75,15 +78,19 @@ export default function ProdutoModal({
   // se alguma categoria principal ainda não tiver subcategorias, ela mesma
   useEffect(() => {
     getCategorias()
-      .then((cats) =>
-        setSubcategorias(
-          cats.filter(
-            (c) => c.categoria_pai_id !== null || !cats.some((filha) => filha.categoria_pai_id === c.id)
-          )
-        )
-      )
+      .then((cats) => {
+        let opcoes = cats.filter(
+          (c) => c.categoria_pai_id !== null || !cats.some((filha) => filha.categoria_pai_id === c.id)
+        );
+        // O produto fica na mesma categoria da loja (ou numa subcategoria dela)
+        if (categoriaLojaId) {
+          opcoes = opcoes.filter((c) => c.id === categoriaLojaId || c.categoria_pai_id === categoriaLojaId);
+          if (opcoes.length === 1) setCategoriaId((atual) => atual || String(opcoes[0].id));
+        }
+        setSubcategorias(opcoes);
+      })
       .catch(() => setErro("Não foi possível carregar as subcategorias."));
-  }, []);
+  }, [categoriaLojaId]);
 
   // Fecha com Esc e trava a rolagem da página enquanto o modal está aberto
   useEffect(() => {

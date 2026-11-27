@@ -47,8 +47,14 @@ export default function Navbar() {
       if (sessao.status !== 401)
         throw new Error("Não foi possível confirmar o logout.");
       setUsuarioId(null);
-      router.push("/feed_deslogado");
-      router.refresh();
+      if (pathname === "/feed_logado") {
+        // No feed o conteúdo é público: só a navbar muda. Troca a URL sem
+        // navegar, para não remontar o FeedConteudo (listas, filtros, scroll).
+        window.history.replaceState(null, "", "/feed_deslogado");
+      } else {
+        router.push("/feed_deslogado");
+        router.refresh();
+      }
     } catch {
       setErroLogout("Não foi possível confirmar a saída. Tente novamente.");
     } finally {

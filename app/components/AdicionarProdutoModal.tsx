@@ -8,10 +8,11 @@ interface AdicionarProdutoModalProps {
   lojaId: number; // loja em que o produto será criado
   onFechar: () => void;
   onCriado: () => void; // chamado depois de salvar, ex: para recarregar a lista
+  categoriaLojaId?: number | null; // limita a categoria do produto à da loja
 }
 
 // Uso: {aberto && <AdicionarProdutoModal lojaId={...} onFechar={...} onCriado={...} />}
-export default function AdicionarProdutoModal({ lojaId, onFechar, onCriado }: AdicionarProdutoModalProps) {
+export default function AdicionarProdutoModal({ lojaId, onFechar, onCriado, categoriaLojaId }: AdicionarProdutoModalProps) {
   // Se o produto for criado mas alguma foto falhar, o modal continua aberto com o erro.
   // Estes refs evitam criar o produto (e as fotos já enviadas) de novo quando o usuário tentar outra vez.
   const produtoCriadoId = useRef<number | null>(null);
@@ -47,6 +48,7 @@ export default function AdicionarProdutoModal({ lojaId, onFechar, onCriado }: Ad
         fechar();
       }}
       onFechar={fechar}
+      categoriaLojaId={categoriaLojaId}
     />
   );
 }

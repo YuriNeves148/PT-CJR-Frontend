@@ -8,10 +8,10 @@ export async function POST(request: Request) {
   try {
     arquivo = (await request.formData()).get("foto");
   } catch {
-    return NextResponse.json({ message: "Envie uma imagem PNG." }, { status: 400 });
+    return NextResponse.json({ message: "Envie uma imagem PNG, JPG, JPEG ou WebP." }, { status: 400 });
   }
   if (!(arquivo instanceof File) || !arquivo.size || arquivo.size > 2 * 1024 * 1024) {
-    return NextResponse.json({ message: "Envie PNG de até 2 MB." }, { status: 400 });
+    return NextResponse.json({ message: "Envie uma imagem de até 2 MB." }, { status: 400 });
   }
   try {
     const sessao = await fetch(`${BACKEND_URL}/user/me`, {

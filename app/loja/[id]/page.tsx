@@ -4,6 +4,7 @@ import LojaAvaliacoes from "@/app/components/loja/LojaAvaliacoes";
 import LojaProdutos from "@/app/components/loja/LojaProdutos";
 import EditarLoja from "@/app/components/loja/EditarLoja";
 import AdicionarAvaliacaoBotao from "@/app/components/loja/AdicionarAvaliacaoBotao";
+import AdicionarProdutoBotao from "@/app/components/loja/AdicionarProdutoBotao";
 import {
   buscarLoja,
   getUsuarioSessao,
@@ -63,6 +64,12 @@ export default async function LojaPage({ params }: LojaPageProps) {
                     banner: urlImagemSegura(loja.banner_url),
                   },
                 }}
+              />
+            )}
+            {ehDono && (
+              <AdicionarProdutoBotao
+                lojaId={loja.id}
+                categoriaLojaId={loja.categoria?.id ?? null}
               />
             )}
             <AdicionarAvaliacaoBotao
